@@ -1,5 +1,11 @@
 import { Database } from "@/types/database.types";
 import { AIService, Models } from "../../../../ai";
+import {
+  computeEndpointVulnerabilities,
+  computeEndpointVulnerabilityDetails,
+  endpointVulnerabilities,
+  endpointVulnerabilityDetails,
+} from "@/lib/constants/endpoint-vulnerabilities";
 
 type ScanRow = Database["public"]["Tables"]["scans"]["Row"];
 type Vulnerability = Database["public"]["Tables"]["vulnerabilities"]["Row"];
@@ -30,6 +36,19 @@ export async function createScanSummary(
 
   console.log(
     `[ScanSummary] Summarizing ${scan.vulnerabilities.length} vulnerabilities`,
+  );
+
+  // Persist endpoint ➜ vulnerability mappings for downstream use
+  // ---------------------------------------------------------------------------
+  const highLevelList = computeEndpointVulnerabilities(scan.vulnerabilities as any);
+  const detailedList = computeEndpointVulnerabilityDetails(scan.vulnerabilities as any);
+
+  // Replace contents of the shared in-memory stores
+  endpointVulnerabilities.splice(0, endpointVulnerabilities.length, ...highLevelList);
+  endpointVulnerabilityDetails.splice(0, endpointVulnerabilityDetails.length, ...detailedList);
+
+  console.log(
+    `[ScanSummary] Stored ${highLevelList.length} endpoint pairs and ${detailedList.length} detailed mappings`,
   );
 
   // Get the AI service instance
