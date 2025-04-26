@@ -205,18 +205,37 @@ async function getFileContent({ projectId, path, branch, commit }) {
     // Extract owner and repo from the full name
     const [owner, repo] = repoFullName.split("/");
     try {
-        // Get repository content based on path, branch/commit
-        const response = commit ? await octokit.repos.getContent({
-            owner,
-            repo,
-            path,
-            ref: commit
-        }) : await octokit.repos.getContent({
-            owner,
-            repo,
-            path,
-            ref: branch || undefined
-        });
+        // Attempt to fetch by commit ref first; if 404, retry with branch
+        let response;
+        try {
+            if (commit) {
+                response = await octokit.repos.getContent({
+                    owner,
+                    repo,
+                    path,
+                    ref: commit
+                });
+            } else {
+                response = await octokit.repos.getContent({
+                    owner,
+                    repo,
+                    path,
+                    ref: branch || undefined
+                });
+            }
+        } catch (err) {
+            if (commit && err?.status === 404) {
+                console.warn(`[repository/content] Commit ref "${commit}" not found for ${path}. Falling back to branch "${branch ?? 'default'}"`);
+                response = await octokit.repos.getContent({
+                    owner,
+                    repo,
+                    path,
+                    ref: branch || undefined
+                });
+            } else {
+                throw err;
+            }
+        }
         const content = response.data;
         // Check if we got a file or a directory
         if (Array.isArray(content)) {
@@ -1352,6 +1371,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2f$se
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$services$2f$serverless$2f$scanner$2f$agents$2f$dependency$2d$retriever$2d$agent$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/services/serverless/scanner/agents/dependency-retriever-agent.ts [app-route] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$services$2f$serverless$2f$scanner$2f$agents$2f$vulnerability$2d$agent$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/services/serverless/scanner/agents/vulnerability-agent.ts [app-route] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$services$2f$serverless$2f$scanner$2f$agents$2f$create$2d$scan$2d$summary$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/services/serverless/scanner/agents/create-scan-summary.ts [app-route] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$octokit$2f$octokit$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/octokit/octokit.ts [app-route] (ecmascript)");
+;
 ;
 ;
 ;
@@ -1567,13 +1588,57 @@ async function runVulnerabilityScan(scanRequest) {
                 };
             }
         }
-        const allFilesToScan = Array.from(expandedFilePaths);
-        if (!isFullScan) {
-            console.log(`[VulnerabilityScan] Total files to scan after dependency analysis: ${allFilesToScan.length}`);
-            await updateLogs(`Found ${allFilesToScan.length} files to scan (${allFilesToScan.length - uniqueFilePaths.length} dependencies added)`);
-        } else {
-            console.log(`[VulnerabilityScan] Total files to scan: ${allFilesToScan.length}`);
-            await updateLogs(`Ready to scan ${allFilesToScan.length} files`);
+        // Filter out file paths that do not actually exist in the repository
+        let allFilesToScan = Array.from(expandedFilePaths);
+        async function filterExistingFiles(projectId, branch, commit, paths) {
+            const { octokit, repoFullName } = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$octokit$2f$octokit$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["getOctokitRepo"])(projectId);
+            const [owner, repo] = repoFullName.split("/");
+            const existing = [];
+            for (const p of paths){
+                try {
+                    // Try commit ref first if provided
+                    if (commit) {
+                        try {
+                            await octokit.rest.repos.getContent({
+                                owner,
+                                repo,
+                                path: p,
+                                ref: commit
+                            });
+                            existing.push(p);
+                            continue;
+                        } catch (err) {
+                            if (!(err && err.status === 404)) {
+                                throw err;
+                            }
+                        // fall through to branch
+                        }
+                    }
+                    // Fallback to branch (or default branch if not provided)
+                    try {
+                        await octokit.rest.repos.getContent({
+                            owner,
+                            repo,
+                            path: p,
+                            ref: branch || undefined
+                        });
+                        existing.push(p);
+                    } catch (err) {
+                        if (!(err && err.status === 404)) {
+                            console.error(`[VulnerabilityScan] Unexpected error while checking ${p}:`, err);
+                        }
+                    // 404 – file truly missing, skip
+                    }
+                } catch (innerErr) {
+                    console.error(`[VulnerabilityScan] Error validating existence of ${p}:`, innerErr);
+                }
+            }
+            return existing;
+        }
+        allFilesToScan = await filterExistingFiles(scanRequest.projectId, scanRequest.branch, scanRequest.commit, allFilesToScan);
+        if (allFilesToScan.length !== expandedFilePaths.size) {
+            await updateLogs(`Skipping ${expandedFilePaths.size - allFilesToScan.length} non-existent files`);
+            console.log(`[VulnerabilityScan] Skipping ${expandedFilePaths.size - allFilesToScan.length} non-existent files`);
         }
         // Step 2: Scan each file for vulnerabilities
         await updateLogs("Starting vulnerability scan...", "scanning_files");
