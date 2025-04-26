@@ -51,6 +51,10 @@ export async function createScanSummary(
     `[ScanSummary] Stored ${highLevelList.length} endpoint pairs and ${detailedList.length} detailed mappings`,
   );
 
+  // Inspect populated lists
+  console.log('[ScanSummary] endpointVulnerabilities:', JSON.stringify(endpointVulnerabilities, null, 2));
+  console.log('[ScanSummary] endpointVulnerabilityDetails:', JSON.stringify(endpointVulnerabilityDetails, null, 2));
+
   // Get the AI service instance
   const aiService = AIService.getInstance();
 
