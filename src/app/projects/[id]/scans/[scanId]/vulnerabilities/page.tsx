@@ -458,6 +458,20 @@ export default function VulnerabilitiesPage() {
 
   // Fetch VULNERABILITY LIST only when projectId or scanId changes
   useEffect(() => {
+    // Load stored vulnerabilities from localStorage
+    const storageKey = `vulnerabilities-${projectId}-${scanId}`;
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          console.log('hydrated vulnerabilities from storage:', parsed);
+          setVulnerabilities(parsed);
+        } catch (e) {
+          console.error('Error parsing stored vulnerabilities', e);
+        }
+      }
+    }
     const fetchVulnerabilities = async () => {
       // Use projectId and scanId directly
       if (!projectId || !scanId) {
@@ -497,6 +511,10 @@ export default function VulnerabilitiesPage() {
         }
         const vulnData = (await vulnResponse.json()) || [];
         setVulnerabilities(vulnData);
+        // Persist vulnerabilities locally
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(storageKey, JSON.stringify(vulnData));
+        }
 
         // Determine INITIAL selection using value read outside effect
         let initialSelection: VulnerabilityRow | null = null;
