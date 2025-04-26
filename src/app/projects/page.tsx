@@ -14,6 +14,7 @@ type ProjectData = Database['public']['Tables']['projects']['Row'];
 // Define the extended type with vulnerability data
 interface ProjectWithVulnerabilities extends ProjectData {
   vulnerabilityCount: number;
+  riskScore: number | null;
   status: 'vulnerable' | 'secure';
 }
 
@@ -48,6 +49,50 @@ async function ProjectsList() {
   }
 
   const projects = projectsData as ProjectWithVulnerabilities[];
+
+  // -------------------------------------------------------------
+  // Augment each project with vulnerability statistics
+  // -------------------------------------------------------------
+
+  for (const project of projects) {
+    // Count vulnerabilities for this project (across all scans)
+    const { count: vulnCount, error: vulnErr } = await supabase
+      .from("vulnerabilities")
+      .select("id", { count: "exact", head: true})
+      .eq("project_id", project.id);
+
+    // Latest completed scan risk score
+    const { data: scanData, error: scanErr } = await supabase
+      .from("scans")
+      .select("risk_score")
+      .eq("project_id", project.id)
+      .eq("status", "completed")
+      .order("created_at", { ascending: false})
+      .limit(1)
+      .maybeSingle();
+
+    if (vulnErr) {
+      console.error(
+        `Error counting vulnerabilities for project ${project.id}:`,
+        vulnErr,
+      );
+    }
+    if (scanErr) {
+      console.error(
+        `Error fetching last scan for project ${project.id}:`,
+        scanErr,
+      );
+    }
+
+    project.vulnerabilityCount = vulnCount || 0;
+    project.riskScore = scanData?.risk_score ?? null;
+
+    // Determine status: secure if riskScore ≤20 & 0 vulnerabilities else vulnerable
+    const risk = project.riskScore ?? 0;
+    project.status = risk > 20 || project.vulnerabilityCount > 0
+      ? "vulnerable"
+      : "secure";
+  }
 
   if (projects.length === 0) {
     return (

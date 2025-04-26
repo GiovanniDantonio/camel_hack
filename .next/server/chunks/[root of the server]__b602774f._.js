@@ -157,14 +157,23 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$octokit$2f
 ;
 ;
 ;
+// -------------------------------------------------------------
+// Helpers: parse query params once so they are available in both
+// try and catch blocks. Doing this outside `try` avoids the TS
+// error that variables are not in scope inside `catch`.
+// -------------------------------------------------------------
+function parseQueryParams(request) {
+    const url = new URL(request.url);
+    return {
+        branch: url.searchParams.get("branch") ?? undefined,
+        repoPath: url.searchParams.get("path") || "",
+        commit: url.searchParams.get("commit") ?? undefined
+    };
+}
 async function GET(request, { params }) {
+    const { branch, repoPath, commit } = parseQueryParams(request);
     try {
         const { id: projectId } = await params;
-        // Get the query parameters
-        const url = new URL(request.url);
-        const branch = url.searchParams.get("branch");
-        const path = url.searchParams.get("path") || "";
-        const commit = url.searchParams.get("commit");
         if (!projectId) {
             return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
                 error: "Project ID is required"
@@ -202,6 +211,13 @@ async function GET(request, { params }) {
         }
         // Get the repository full name from project data
         const repoFullName = projectData.repository_full_name;
+        if (!repoFullName) {
+            return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+                error: "Project repository not configured"
+            }, {
+                status: 400
+            });
+        }
         // Get the GitHub access token
         const { data: githubProfile, error: githubProfileError } = await supabase.from("github_profiles").select("github_access_token").eq("user_id", user.id).single();
         if (githubProfileError || !githubProfile || !githubProfile.github_access_token) {
@@ -218,18 +234,54 @@ async function GET(request, { params }) {
         });
         // Extract owner and repo from the full name
         const [owner, repo] = repoFullName.split("/");
-        // Get repository content based on path, branch/commit
-        const response = commit ? await octokit.rest.repos.getContent({
-            owner,
-            repo,
-            path,
-            ref: commit
-        }) : await octokit.rest.repos.getContent({
-            owner,
-            repo,
-            path,
-            ref: branch || undefined
-        });
+        // ---------------------------------------------------------------------
+        // Get repository content. Attempt commit ref first (if provided). If the
+        // ref does not exist (GitHub returns 404), fall back to the branch.
+        // This prevents 500s when the UI passes a label that is not an actual
+        // commit SHA.
+        // ---------------------------------------------------------------------
+        let response;
+        try {
+            if (commit) {
+                response = await octokit.rest.repos.getContent({
+                    owner,
+                    repo,
+                    path: repoPath,
+                    ref: commit
+                });
+            } else {
+                response = await octokit.rest.repos.getContent({
+                    owner,
+                    repo,
+                    path: repoPath,
+                    ref: branch || undefined
+                });
+            }
+        } catch (err) {
+            // If commit lookup failed (most commonly 404), retry using branch ref
+            if (commit && err?.status === 404) {
+                console.warn(`[repository/files] Commit ref "${commit}" not found. Falling back to branch "${branch ?? 'default'}"`);
+                response = await octokit.rest.repos.getContent({
+                    owner,
+                    repo,
+                    path: repoPath,
+                    ref: branch || undefined
+                });
+            } else {
+                throw err;
+            }
+        }
+        // If after fallback we still get 404, treat as empty directory
+        if (!response) {
+            return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+                files: [],
+                path: repoPath,
+                branch,
+                commit
+            }, {
+                status: 200
+            });
+        }
         // Process and return the content
         const data = response.data;
         let files = [];
@@ -260,20 +312,25 @@ async function GET(request, { params }) {
         }
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             files,
-            path,
+            path: repoPath,
             branch: branch || undefined,
             commit: commit || undefined
         });
     } catch (error) {
-        console.error("Error fetching repository files:", error);
-        // Check for specific GitHub API errors
+        // If it's a 404, it's simply a non-existent path – treat as empty without noise
         if (error && typeof error === "object" && "status" in error && error.status === 404) {
+            console.info(`[repository/files] Path "${repoPath}" not found in ref ${commit ?? branch ?? "default"}, returning empty list`);
             return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
-                error: "Path not found in repository"
+                files: [],
+                path: repoPath,
+                branch,
+                commit
             }, {
-                status: 404
+                status: 200
             });
         }
+        // Unexpected error – log and surface 500
+        console.error("[repository/files] Unexpected error fetching files:", error);
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             error: "Failed to fetch repository files"
         }, {

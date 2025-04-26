@@ -417,7 +417,7 @@ async function ProjectsList() {
                         children: "Authentication required"
                     }, void 0, false, {
                         fileName: "[project]/src/app/projects/page.tsx",
-                        lineNumber: 30,
+                        lineNumber: 31,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -425,18 +425,18 @@ async function ProjectsList() {
                         children: "Please sign in to view your projects."
                     }, void 0, false, {
                         fileName: "[project]/src/app/projects/page.tsx",
-                        lineNumber: 31,
+                        lineNumber: 32,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/projects/page.tsx",
-                lineNumber: 29,
+                lineNumber: 30,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/app/projects/page.tsx",
-            lineNumber: 28,
+            lineNumber: 29,
             columnNumber: 7
         }, this);
     }
@@ -447,6 +447,31 @@ async function ProjectsList() {
         return null;
     }
     const projects = projectsData;
+    // -------------------------------------------------------------
+    // Augment each project with vulnerability statistics
+    // -------------------------------------------------------------
+    for (const project of projects){
+        // Count vulnerabilities for this project (across all scans)
+        const { count: vulnCount, error: vulnErr } = await supabase.from("vulnerabilities").select("id", {
+            count: "exact",
+            head: true
+        }).eq("project_id", project.id);
+        // Latest completed scan risk score
+        const { data: scanData, error: scanErr } = await supabase.from("scans").select("risk_score").eq("project_id", project.id).eq("status", "completed").order("created_at", {
+            ascending: false
+        }).limit(1).maybeSingle();
+        if (vulnErr) {
+            console.error(`Error counting vulnerabilities for project ${project.id}:`, vulnErr);
+        }
+        if (scanErr) {
+            console.error(`Error fetching last scan for project ${project.id}:`, scanErr);
+        }
+        project.vulnerabilityCount = vulnCount || 0;
+        project.riskScore = scanData?.risk_score ?? null;
+        // Determine status: secure if riskScore ≤20 & 0 vulnerabilities else vulnerable
+        const risk = project.riskScore ?? 0;
+        project.status = risk > 20 || project.vulnerabilityCount > 0 ? "vulnerable" : "secure";
+    }
     if (projects.length === 0) {
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "flex flex-col items-center justify-center py-16 px-4 border border-dashed rounded-lg",
@@ -458,7 +483,7 @@ async function ProjectsList() {
                         children: "No projects found"
                     }, void 0, false, {
                         fileName: "[project]/src/app/projects/page.tsx",
-                        lineNumber: 56,
+                        lineNumber: 101,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -466,7 +491,7 @@ async function ProjectsList() {
                         children: "Start by creating your first project to begin monitoring for security vulnerabilities."
                     }, void 0, false, {
                         fileName: "[project]/src/app/projects/page.tsx",
-                        lineNumber: 57,
+                        lineNumber: 102,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
@@ -477,30 +502,30 @@ async function ProjectsList() {
                                     className: "mr-2 h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/projects/page.tsx",
-                                    lineNumber: 63,
+                                    lineNumber: 108,
                                     columnNumber: 15
                                 }, this),
                                 "Create your first project"
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/projects/page.tsx",
-                            lineNumber: 62,
+                            lineNumber: 107,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/app/projects/page.tsx",
-                        lineNumber: 61,
+                        lineNumber: 106,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/projects/page.tsx",
-                lineNumber: 55,
+                lineNumber: 100,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/app/projects/page.tsx",
-            lineNumber: 54,
+            lineNumber: 99,
             columnNumber: 7
         }, this);
     }
@@ -508,7 +533,7 @@ async function ProjectsList() {
         projects: projects
     }, void 0, false, {
         fileName: "[project]/src/app/projects/page.tsx",
-        lineNumber: 72,
+        lineNumber: 117,
         columnNumber: 10
     }, this);
 }
@@ -527,20 +552,20 @@ function LoadingProjects() {
                                 className: "h-6 bg-muted rounded w-3/4"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/projects/page.tsx",
-                                lineNumber: 81,
+                                lineNumber: 126,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "h-4 bg-muted rounded w-1/2 mt-2"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/projects/page.tsx",
-                                lineNumber: 82,
+                                lineNumber: 127,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/projects/page.tsx",
-                        lineNumber: 80,
+                        lineNumber: 125,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -549,7 +574,7 @@ function LoadingProjects() {
                                 className: "h-4 bg-muted rounded w-full mb-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/projects/page.tsx",
-                                lineNumber: 85,
+                                lineNumber: 130,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -559,37 +584,37 @@ function LoadingProjects() {
                                         className: "h-4 bg-muted rounded w-2/3"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/projects/page.tsx",
-                                        lineNumber: 87,
+                                        lineNumber: 132,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "h-4 bg-muted rounded w-1/2"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/projects/page.tsx",
-                                        lineNumber: 88,
+                                        lineNumber: 133,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/projects/page.tsx",
-                                lineNumber: 86,
+                                lineNumber: 131,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/projects/page.tsx",
-                        lineNumber: 84,
+                        lineNumber: 129,
                         columnNumber: 11
                     }, this)
                 ]
             }, i, true, {
                 fileName: "[project]/src/app/projects/page.tsx",
-                lineNumber: 79,
+                lineNumber: 124,
                 columnNumber: 9
             }, this))
     }, void 0, false, {
         fileName: "[project]/src/app/projects/page.tsx",
-        lineNumber: 77,
+        lineNumber: 122,
         columnNumber: 5
     }, this);
 }
@@ -608,7 +633,7 @@ function DashboardPage() {
                                     children: "Projects"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/projects/page.tsx",
-                                    lineNumber: 104,
+                                    lineNumber: 149,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -616,13 +641,13 @@ function DashboardPage() {
                                     children: "Manage and monitor your security testing projects"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/projects/page.tsx",
-                                    lineNumber: 105,
+                                    lineNumber: 150,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/projects/page.tsx",
-                            lineNumber: 103,
+                            lineNumber: 148,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["default"], {
@@ -634,52 +659,52 @@ function DashboardPage() {
                                         className: "mr-2 h-4 w-4"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/projects/page.tsx",
-                                        lineNumber: 111,
+                                        lineNumber: 156,
                                         columnNumber: 15
                                     }, this),
                                     "New Project"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/projects/page.tsx",
-                                lineNumber: 110,
+                                lineNumber: 155,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/projects/page.tsx",
-                            lineNumber: 109,
+                            lineNumber: 154,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/projects/page.tsx",
-                    lineNumber: 102,
+                    lineNumber: 147,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["Suspense"], {
                     fallback: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(LoadingProjects, {}, void 0, false, {
                         fileName: "[project]/src/app/projects/page.tsx",
-                        lineNumber: 118,
+                        lineNumber: 163,
                         columnNumber: 29
                     }, void 0),
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(ProjectsList, {}, void 0, false, {
                         fileName: "[project]/src/app/projects/page.tsx",
-                        lineNumber: 119,
+                        lineNumber: 164,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/projects/page.tsx",
-                    lineNumber: 118,
+                    lineNumber: 163,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/projects/page.tsx",
-            lineNumber: 100,
+            lineNumber: 145,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/projects/page.tsx",
-        lineNumber: 99,
+        lineNumber: 144,
         columnNumber: 5
     }, this);
 }
