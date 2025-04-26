@@ -1,7 +1,9 @@
 {
+  "/api/github/repositories/route": "app/api/github/repositories/route.js",
   "/api/profile/github/route": "app/api/profile/github/route.js",
   "/api/projects/[id]/repository/route": "app/api/projects/[id]/repository/route.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/projects/[id]/page": "app/projects/[id]/page.js",
+  "/projects/new-project/page": "app/projects/new-project/page.js",
   "/projects/page": "app/projects/page.js"
 }

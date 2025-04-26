@@ -763,11 +763,20 @@ function ProjectsClient({ projects }) {
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                className: `font-medium ${project.vulnerabilityCount > 0 ? 'text-destructive' : 'text-green-600'}`,
+                                                                className: `font-medium ${(()=>{
+                                                                    if (project.riskScore === null) {
+                                                                        return project.vulnerabilityCount > 0 ? 'text-red-600' : 'text-green-600';
+                                                                    }
+                                                                    const score = project.riskScore ?? 0;
+                                                                    if (score <= 20) return 'text-green-600';
+                                                                    if (score <= 40) return 'text-yellow-600';
+                                                                    if (score <= 70) return 'text-orange-600';
+                                                                    return 'text-red-600';
+                                                                })()}`,
                                                                 children: project.vulnerabilityCount || 0
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/projects/projects-client.tsx",
-                                                                lineNumber: 176,
+                                                                lineNumber: 174,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
@@ -813,12 +822,12 @@ function ProjectsClient({ projects }) {
                                             className: "h-5 w-5 text-primary"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/projects/projects-client.tsx",
-                                            lineNumber: 197,
+                                            lineNumber: 200,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/projects/projects-client.tsx",
-                                        lineNumber: 196,
+                                        lineNumber: 199,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -826,7 +835,7 @@ function ProjectsClient({ projects }) {
                                         children: "Add a new project"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/projects/projects-client.tsx",
-                                        lineNumber: 199,
+                                        lineNumber: 202,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CardDescription"], {
@@ -834,23 +843,23 @@ function ProjectsClient({ projects }) {
                                         children: "Create a new project to monitor"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/projects/projects-client.tsx",
-                                        lineNumber: 200,
+                                        lineNumber: 203,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/projects/projects-client.tsx",
-                                lineNumber: 195,
+                                lineNumber: 198,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/projects/projects-client.tsx",
-                            lineNumber: 194,
+                            lineNumber: 197,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/projects/projects-client.tsx",
-                        lineNumber: 193,
+                        lineNumber: 196,
                         columnNumber: 9
                     }, this)
                 ]

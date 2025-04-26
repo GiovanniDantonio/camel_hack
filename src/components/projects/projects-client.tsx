@@ -170,15 +170,18 @@ export function ProjectsClient({ projects }: ProjectsClientProps) {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">
-                      Vulnerabilities
-                    </span>
+                    <span className="text-muted-foreground">Vulnerabilities</span>
                     <span
-                      className={`font-medium ${
-                        project.vulnerabilityCount > 0
-                          ? 'text-destructive'
-                          : 'text-green-600'
-                      }`}
+                      className={`font-medium ${(() => {
+                        if (project.riskScore === null) {
+                          return project.vulnerabilityCount > 0 ? 'text-red-600' : 'text-green-600';
+                        }
+                        const score = project.riskScore ?? 0;
+                        if (score <= 20) return 'text-green-600';
+                        if (score <= 40) return 'text-yellow-600';
+                        if (score <= 70) return 'text-orange-600';
+                        return 'text-red-600';
+                      })()}`}
                     >
                       {project.vulnerabilityCount || 0}
                     </span>
