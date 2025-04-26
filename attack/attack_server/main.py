@@ -11,18 +11,21 @@ def run_server():
 
 
 if __name__ == "__main__":
+    print("*** Starting Vulnerability Test ***")
+    print("*** Starting Server ***")
     server_thread = threading.Thread(target=run_server, daemon=True)
     server_thread.start()
     time.sleep(2)
     tester = VulnerabilityTester(base_url="http://127.0.0.1:5000")
     vulnerabilities = [
         {"endpoint": "/users", "expected_status": 200},
-        {"endpoint": "/user/1", "expected_status": 401},  # Should be unauthorized
+        {"endpoint": "/user/1", "expected_status": 401},
     ]
     results = tester.run_tests(vulnerabilities)
     
-    print("Vulnerability Test Results:", results)
-    
+    print("*** Finished Vulnerability Test ***")
+    print('\n'*6, "Vulnerability Test Results:", results)
+    print("*** Killing Server ***")
     # Send kill signal to the process
     os.kill(os.getpid(), signal.SIGTERM)
     # Wait for thread to complete
