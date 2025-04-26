@@ -14,13 +14,23 @@ export const Models = {
   getProviderName: (model: AIModel): string => {
     // Check which provider's enum contains this model
     for (const [providerName, enumObj] of Object.entries(Models)) {
-      if (providerName !== 'getProviderName' && Object.values(enumObj).includes(model as any)) {
+      if (providerName !== 'getProviderName' && providerName !== 'getAllModels' && Object.values(enumObj).includes(model as any)) {
         return providerName;
       }
     }
     return "Unknown";
-  }
+  },
+
+  // Return a flattened array of ALL model values across providers
+  getAllModels: (): AIModel[] => {
+    return [
+      ...(Object.values(OpenAIModel) as string[]),
+      ...(Object.values(XAIModel) as string[]),
+      ...(Object.values(GroqModel) as string[]),
+      ...(Object.values(AnthropicModel) as string[]),
+    ] as AIModel[];
+  },
 };
 
 // Export a union type of all models for type safety
-export type AIModel = OpenAIModel | XAIModel | GroqModel | AnthropicModel; 
+export type AIModel = OpenAIModel | XAIModel | GroqModel | AnthropicModel;

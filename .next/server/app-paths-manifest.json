@@ -11,12 +11,12 @@
   "/api/projects/new/route": "app/api/projects/new/route.js",
   "/api/vulnerabilities/custom/route": "app/api/vulnerabilities/custom/route.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js",
   "/projects/[id]/page": "app/projects/[id]/page.js",
   "/projects/[id]/scans/[scanId]/page": "app/projects/[id]/scans/[scanId]/page.js",
   "/projects/[id]/scans/[scanId]/vulnerabilities/page": "app/projects/[id]/scans/[scanId]/vulnerabilities/page.js",
   "/projects/[id]/scans/new/page": "app/projects/[id]/scans/new/page.js",
   "/projects/[id]/scans/page": "app/projects/[id]/scans/page.js",
-  "/projects/[id]/vulnerabilities/page": "app/projects/[id]/vulnerabilities/page.js",
   "/projects/new-project/page": "app/projects/new-project/page.js",
   "/projects/page": "app/projects/page.js"
 }
