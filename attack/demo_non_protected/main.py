@@ -1,4 +1,30 @@
 from flask import Flask, request, jsonify, session
+import json
+import requests
+import time
+import threading
+import logging
+from datetime import datetime
+import sys
+import signal
+import psutil
+import subprocess
+
+def kill_port_5000():
+    try:
+        # Find process using port 5000
+        result = subprocess.run(['lsof', '-i', ':5000'], capture_output=True, text=True)
+        if result.stdout:
+            # Get the PID from the output
+            lines = result.stdout.strip().split('\n')
+            if len(lines) > 1:  # Skip header line
+                pid = lines[1].split()[1]
+                # Kill the process
+                subprocess.run(['kill', '-9', pid])
+                print(f"Killed process {pid} running on port 5000")
+    except Exception as e:
+        print(f"Error killing port 5000: {e}")
+
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -45,4 +71,5 @@ def get_user(user_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    kill_port_5000()
+    app.run(debug=False)
