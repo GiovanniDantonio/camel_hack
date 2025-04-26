@@ -3,6 +3,7 @@ import { Database } from "@/types/database.types";
 import { getParentFiles } from "./agents/dependency-retriever-agent";
 import { runVulnerabilityAgent } from "./agents/vulnerability-agent";
 import { createScanSummary } from "./agents/create-scan-summary";
+import { getOctokitRepo } from "@/lib/octokit/octokit";
 
 /**
  * Sanitizes vulnerability data to prevent PostgreSQL errors with invalid Unicode characters.
@@ -382,23 +383,83 @@ export async function runVulnerabilityScan(
       }
     }
 
-    const allFilesToScan = Array.from(expandedFilePaths);
+    // Filter out file paths that do not actually exist in the repository
+    let allFilesToScan = Array.from(expandedFilePaths);
 
-    if (!isFullScan) {
-      console.log(
-        `[VulnerabilityScan] Total files to scan after dependency analysis: ${allFilesToScan.length}`,
-      );
+    async function filterExistingFiles(
+      projectId: string,
+      branch: string,
+      commit: string,
+      paths: string[],
+    ): Promise<string[]> {
+      const { octokit, repoFullName } = await getOctokitRepo(projectId);
+      const [owner, repo] = repoFullName.split("/");
+
+      const existing: string[] = [];
+
+      for (const p of paths) {
+        try {
+          // Try commit ref first if provided
+          if (commit) {
+            try {
+              await octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path: p,
+                ref: commit,
+              });
+              existing.push(p);
+              continue;
+            } catch (err: any) {
+              if (!(err && err.status === 404)) {
+                throw err;
+              }
+              // fall through to branch
+            }
+          }
+
+          // Fallback to branch (or default branch if not provided)
+          try {
+            await octokit.rest.repos.getContent({
+              owner,
+              repo,
+              path: p,
+              ref: branch || undefined,
+            });
+            existing.push(p);
+          } catch (err: any) {
+            if (!(err && err.status === 404)) {
+              console.error(
+                `[VulnerabilityScan] Unexpected error while checking ${p}:`,
+                err,
+              );
+            }
+            // 404 – file truly missing, skip
+          }
+        } catch (innerErr) {
+          console.error(
+            `[VulnerabilityScan] Error validating existence of ${p}:`,
+            innerErr,
+          );
+        }
+      }
+
+      return existing;
+    }
+
+    allFilesToScan = await filterExistingFiles(
+      scanRequest.projectId,
+      scanRequest.branch,
+      scanRequest.commit,
+      allFilesToScan,
+    );
+
+    if (allFilesToScan.length !== expandedFilePaths.size) {
       await updateLogs(
-        `Found ${allFilesToScan.length} files to scan (${
-          allFilesToScan.length - uniqueFilePaths.length
-        } dependencies added)`,
+        `Skipping ${expandedFilePaths.size - allFilesToScan.length} non-existent files`,
       );
-    } else {
       console.log(
-        `[VulnerabilityScan] Total files to scan: ${allFilesToScan.length}`,
-      );
-      await updateLogs(
-        `Ready to scan ${allFilesToScan.length} files`,
+        `[VulnerabilityScan] Skipping ${expandedFilePaths.size - allFilesToScan.length} non-existent files`,
       );
     }
 

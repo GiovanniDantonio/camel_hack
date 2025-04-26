@@ -20,6 +20,7 @@ type ProjectData = Database['public']['Tables']['projects']['Row'];
 // Define the extended type with vulnerability data
 interface ProjectWithVulnerabilities extends ProjectData {
   vulnerabilityCount: number;
+  riskScore: number | null;
   status: 'vulnerable' | 'secure';
 }
 
@@ -121,23 +122,27 @@ export function ProjectsClient({ projects }: ProjectsClientProps) {
                     {project.project_name}
                   </CardTitle>
                   <Badge
-                    variant={
-                      project.status === 'vulnerable'
-                        ? 'destructive'
-                        : 'default'
-                    }
                     className="capitalize shrink-0 mt-1"
+                    style={{
+                      backgroundColor: (() => {
+                        const score = project.riskScore ?? 0;
+                        if (score <= 20) return '#059669'; // green
+                        if (score <= 40) return '#d97706'; // yellow-600
+                        if (score <= 70) return '#ea580c'; // orange-600
+                        return '#dc2626'; // red-600
+                      })(),
+                      color: 'white',
+                    }}
                   >
-                    {project.status === 'vulnerable' ? (
-                      <>
-                        <AlertCircle className="mr-1 h-3 w-3" />
-                        At Risk
-                      </>
+                    {project.riskScore !== null ? (
+                      (() => {
+                        const score = project.riskScore ?? 0;
+                        if (score <= 20) return 'Low Risk';
+                        if (score <= 70) return 'Medium Risk';
+                        return 'High Risk';
+                      })()
                     ) : (
-                      <>
-                        <CheckCircle2 className="mr-1 h-3 w-3" />
-                        Secure
-                      </>
+                      project.status === 'vulnerable' ? 'At Risk' : 'Secure'
                     )}
                   </Badge>
                 </div>

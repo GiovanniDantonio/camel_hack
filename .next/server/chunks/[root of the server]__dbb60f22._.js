@@ -205,18 +205,37 @@ async function getFileContent({ projectId, path, branch, commit }) {
     // Extract owner and repo from the full name
     const [owner, repo] = repoFullName.split("/");
     try {
-        // Get repository content based on path, branch/commit
-        const response = commit ? await octokit.repos.getContent({
-            owner,
-            repo,
-            path,
-            ref: commit
-        }) : await octokit.repos.getContent({
-            owner,
-            repo,
-            path,
-            ref: branch || undefined
-        });
+        // Attempt to fetch by commit ref first; if 404, retry with branch
+        let response;
+        try {
+            if (commit) {
+                response = await octokit.repos.getContent({
+                    owner,
+                    repo,
+                    path,
+                    ref: commit
+                });
+            } else {
+                response = await octokit.repos.getContent({
+                    owner,
+                    repo,
+                    path,
+                    ref: branch || undefined
+                });
+            }
+        } catch (err) {
+            if (commit && err?.status === 404) {
+                console.warn(`[repository/content] Commit ref "${commit}" not found for ${path}. Falling back to branch "${branch ?? 'default'}"`);
+                response = await octokit.repos.getContent({
+                    owner,
+                    repo,
+                    path,
+                    ref: branch || undefined
+                });
+            } else {
+                throw err;
+            }
+        }
         const content = response.data;
         // Check if we got a file or a directory
         if (Array.isArray(content)) {

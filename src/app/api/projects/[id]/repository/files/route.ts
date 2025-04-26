@@ -2,18 +2,29 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { Octokit } from "@octokit/rest";
 
+// -------------------------------------------------------------
+// Helpers: parse query params once so they are available in both
+// try and catch blocks. Doing this outside `try` avoids the TS
+// error that variables are not in scope inside `catch`.
+// -------------------------------------------------------------
+
+function parseQueryParams(request: Request) {
+  const url = new URL(request.url);
+  return {
+    branch: url.searchParams.get("branch") ?? undefined,
+    repoPath: url.searchParams.get("path") || "",
+    commit: url.searchParams.get("commit") ?? undefined,
+  } as const;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: { id: string } },
 ) {
+  const { branch, repoPath, commit } = parseQueryParams(request);
+
   try {
     const { id: projectId } = await params;
-
-    // Get the query parameters
-    const url = new URL(request.url);
-    const branch = url.searchParams.get("branch");
-    const path = url.searchParams.get("path") || "";
-    const commit = url.searchParams.get("commit");
 
     if (!projectId) {
       return NextResponse.json(
@@ -60,6 +71,13 @@ export async function GET(
     // Get the repository full name from project data
     const repoFullName = projectData.repository_full_name;
 
+    if (!repoFullName) {
+      return NextResponse.json(
+        { error: "Project repository not configured" },
+        { status: 400 },
+      );
+    }
+
     // Get the GitHub access token
     const { data: githubProfile, error: githubProfileError } = await supabase
       .from("github_profiles")
@@ -86,20 +104,50 @@ export async function GET(
     // Extract owner and repo from the full name
     const [owner, repo] = repoFullName.split("/");
 
-    // Get repository content based on path, branch/commit
-    const response = commit
-      ? await octokit.rest.repos.getContent({
-        owner,
-        repo,
-        path,
-        ref: commit,
-      })
-      : await octokit.rest.repos.getContent({
-        owner,
-        repo,
-        path,
-        ref: branch || undefined,
-      });
+    // ---------------------------------------------------------------------
+    // Get repository content. Attempt commit ref first (if provided). If the
+    // ref does not exist (GitHub returns 404), fall back to the branch.
+    // This prevents 500s when the UI passes a label that is not an actual
+    // commit SHA.
+    // ---------------------------------------------------------------------
+    let response;
+    try {
+      if (commit) {
+        response = await octokit.rest.repos.getContent({
+          owner,
+          repo,
+          path: repoPath,
+          ref: commit,
+        });
+      } else {
+        response = await octokit.rest.repos.getContent({
+          owner,
+          repo,
+          path: repoPath,
+          ref: branch || undefined,
+        });
+      }
+    } catch (err: any) {
+      // If commit lookup failed (most commonly 404), retry using branch ref
+      if (commit && err?.status === 404) {
+        console.warn(
+          `[repository/files] Commit ref "${commit}" not found. Falling back to branch "${branch ?? 'default'}"`,
+        );
+        response = await octokit.rest.repos.getContent({
+          owner,
+          repo,
+          path: repoPath,
+          ref: branch || undefined,
+        });
+      } else {
+        throw err;
+      }
+    }
+
+    // If after fallback we still get 404, treat as empty directory
+    if (!response) {
+      return NextResponse.json({ files: [], path: repoPath, branch, commit }, { status: 200 });
+    }
 
     // Process and return the content
     const data = response.data;
@@ -131,24 +179,24 @@ export async function GET(
 
     return NextResponse.json({
       files,
-      path,
+      path: repoPath,
       branch: branch || undefined,
       commit: commit || undefined,
     });
   } catch (error: unknown) {
-    console.error("Error fetching repository files:", error);
-
-    // Check for specific GitHub API errors
+    // If it's a 404, it's simply a non-existent path – treat as empty without noise
     if (
       error && typeof error === "object" && "status" in error &&
-      error.status === 404
+      (error as { status?: number }).status === 404
     ) {
-      return NextResponse.json(
-        { error: "Path not found in repository" },
-        { status: 404 },
+      console.info(
+        `[repository/files] Path "${repoPath}" not found in ref ${commit ?? branch ?? "default"}, returning empty list`,
       );
+      return NextResponse.json({ files: [], path: repoPath, branch, commit }, { status: 200 });
     }
 
+    // Unexpected error – log and surface 500
+    console.error("[repository/files] Unexpected error fetching files:", error);
     return NextResponse.json(
       { error: "Failed to fetch repository files" },
       { status: 500 },
