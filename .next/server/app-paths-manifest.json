@@ -1,4 +1,7 @@
 {
   "/api/profile/github/route": "app/api/profile/github/route.js",
-  "/page": "app/page.js"
+  "/api/projects/[id]/repository/route": "app/api/projects/[id]/repository/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/projects/[id]/page": "app/projects/[id]/page.js",
+  "/projects/page": "app/projects/page.js"
 }
