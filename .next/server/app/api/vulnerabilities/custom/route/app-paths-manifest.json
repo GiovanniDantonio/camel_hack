@@ -1,0 +1,3 @@
+{
+  "/api/vulnerabilities/custom/route": "app/api/vulnerabilities/custom/route.js"
+}
