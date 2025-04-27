@@ -1,0 +1,380 @@
+/* [project]/src/app/vscode-lite/style.css [app-client] (css) */
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+  color: #ffffffde;
+  background-color: #242424;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter .3s;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logo.vanilla:hover {
+  filter: drop-shadow(0 0 2em #f7df1eaa);
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid #0000;
+  padding: .6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color .25s;
+}
+
+button:hover {
+  border-color: #646cff;
+}
+
+button:focus, button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+.vsc-btn {
+  background: #23272e;
+  color: #d4d4d4;
+  border: 1px solid #2a2d32;
+  border-radius: 4px;
+  padding: 0 12px;
+  height: 28px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: background .15s, border .15s, color .15s, box-shadow .15s;
+  box-shadow: none;
+}
+
+.vsc-btn:hover, .vsc-btn:focus {
+  background: #31313a;
+  color: #fff;
+  border: 1px solid #3794ff;
+  outline: none;
+}
+
+.vsc-btn:active {
+  background: #23272e;
+  color: #3794ff;
+  border: 1px solid #3794ff;
+}
+
+#toolbar {
+  gap: 6px;
+}
+
+#sidebar .sidebar-resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 20;
+  background: none;
+  transition: background .2s;
+}
+
+#sidebar .sidebar-resizer:hover {
+  background: #31313a44;
+}
+
+#rightsidebar .rightsidebar-resizer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 20;
+  background: none;
+  transition: background .2s;
+}
+
+#rightsidebar .rightsidebar-resizer:hover {
+  background: #31313a44;
+}
+
+#sidebar {
+  transition: width .2s, min-width .2s, max-width .2s;
+  min-width: 48px;
+  max-width: 350px;
+  background: #23272e;
+  border-right: 1px solid #222;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+}
+
+#sidebar.collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+}
+
+#rightsidebar {
+  background: #23272e;
+  border-left: 1px solid #222;
+  overflow: hidden;
+  position: relative;
+  min-width: 200px;
+  max-width: 480px;
+  transition: width .2s, min-width .2s, max-width .2s;
+}
+
+#rightsidebar.collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+}
+
+#rightsidebar-toggle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #d4d4d4;
+  z-index: 21;
+}
+
+#rightsidebar-toggle:hover {
+  color: #3794ff;
+}
+
+#ai-agent-header {
+  font-weight: 600;
+  font-size: 15px;
+  margin: 10px 0 4px 12px;
+  color: #fff;
+}
+
+#ai-agent-content {
+  padding: 0 8px 8px;
+}
+
+#rightbar {
+  width: 48px;
+  background: #23272e;
+  border-left: 1px solid #222;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 10px;
+}
+
+#collapse-rightbar-btn {
+  font-size: 24px;
+  color: #d4d4d4;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+
+#collapse-rightbar-btn:hover {
+  background: #31313a;
+  color: #3794ff;
+}
+
+#activitybar {
+  width: 48px;
+  background: #23272e;
+  border-right: 1px solid #222;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+#activitybar .codicon {
+  font-size: 24px;
+  margin: 12px 0;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity .2s, background .2s, color .2s;
+  cursor: pointer;
+  opacity: .7;
+}
+
+#activitybar .codicon.active {
+  background: #31313a;
+  color: #3794ff;
+  opacity: 1;
+}
+
+#activitybar .codicon:hover {
+  opacity: 1;
+  background: #23272e99;
+}
+
+#sidebar-header {
+  font-weight: 600;
+  font-size: 15px;
+  margin: 10px 0 4px 12px;
+  color: #fff;
+}
+
+#sidebar-content {
+  padding: 0 8px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #23272e #1e1e1e;
+}
+
+#sidebar-content::-webkit-scrollbar {
+  width: 6px;
+  background: #23272e;
+}
+
+#sidebar-content::-webkit-scrollbar-thumb {
+  background: #31313a;
+  border-radius: 3px;
+}
+
+#tabbar .tab.active {
+  background: #1e1e1e;
+  color: #fff;
+}
+
+#statusbar {
+  background: #23272e;
+  border-top: 1px solid #222;
+  color: #d4d4d4;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 14px;
+  font-size: 13px;
+  height: 24px;
+}
+
+#folder-tree {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  height: auto;
+  box-sizing: border-box;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+#folder-tree .file.active {
+  background: #23272e;
+  color: #3794ff;
+}
+
+#folder-tree .file {
+  border-radius: 4px;
+  padding: 3px 6px;
+  margin-bottom: 2px;
+  transition: background .15s, color .15s;
+}
+
+#folder-tree .file:hover {
+  background: #31313a;
+  color: #fff;
+}
+
+#folder-tree .codicon {
+  font-size: 16px;
+  color: #d4d4d4;
+}
+
+#explorer-view.sidebar-view.active {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #fff;
+  }
+
+  a:hover {
+    color: #747bff;
+  }
+
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+/*# sourceMappingURL=src_app_vscode-lite_style_b52d8e88.css.map*/

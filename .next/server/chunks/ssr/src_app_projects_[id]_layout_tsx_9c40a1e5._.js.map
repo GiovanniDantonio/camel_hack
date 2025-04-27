@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file:///Users/giovannidantonio/Documents/GitHub/camel_hack/src/app/projects/%5Bid%5D/layout.tsx"],"sourcesContent":["'use client';\n\nexport default function ProjectLayout({\n  children,\n}: {\n  children: React.ReactNode;\n}) {\n  return (\n    <div className=\"container mx-auto\">\n      <div className=\"py-6\">{children}</div>\n    </div>\n  );\n}\n"],"names":[],"mappings":";;;;AAAA;;AAEe,SAAS,cAAc,EACpC,QAAQ,EAGT;IACC,qBACE,8OAAC;QAAI,WAAU;kBACb,cAAA,8OAAC;YAAI,WAAU;sBAAQ;;;;;;;;;;;AAG7B","debugId":null}}]
-}

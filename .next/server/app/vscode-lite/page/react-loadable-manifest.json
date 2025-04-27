@@ -1,0 +1,9 @@
+{
+  "[project]/node_modules/@monaco-editor/react/dist/index.mjs [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/node_modules/@monaco-editor/react/dist/index.mjs [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/node_modules_9b20a9cc._.js",
+      "static/chunks/node_modules_@monaco-editor_react_dist_index_mjs_03a768ec._.js"
+    ]
+  }
+}

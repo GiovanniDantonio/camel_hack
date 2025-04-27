@@ -2955,10 +2955,6 @@
     border-color: var(--color-green-300);
   }
 
-  .border-green-700 {
-    border-color: var(--color-green-700);
-  }
-
   .border-input {
     border-color: var(--input);
   }
@@ -3129,10 +3125,6 @@
 
   .bg-green-500 {
     background-color: var(--color-green-500);
-  }
-
-  .bg-green-600 {
-    background-color: var(--color-green-600);
   }
 
   .bg-muted {
@@ -3611,10 +3603,6 @@
     overflow-wrap: break-word;
   }
 
-  .break-all {
-    word-break: break-all;
-  }
-
   .text-clip {
     text-overflow: clip;
   }
@@ -3833,6 +3821,10 @@
 
   .uppercase {
     text-transform: uppercase;
+  }
+
+  .\!italic {
+    font-style: italic !important;
   }
 
   .italic {
@@ -4056,10 +4048,6 @@
     filter: var(--tw-blur, ) var(--tw-brightness, ) var(--tw-contrast, ) var(--tw-grayscale, ) var(--tw-hue-rotate, ) var(--tw-invert, ) var(--tw-saturate, ) var(--tw-sepia, ) var(--tw-drop-shadow, );
   }
 
-  .filter\! {
-    filter: var(--tw-blur, ) var(--tw-brightness, ) var(--tw-contrast, ) var(--tw-grayscale, ) var(--tw-hue-rotate, ) var(--tw-invert, ) var(--tw-saturate, ) var(--tw-sepia, ) var(--tw-drop-shadow, ) !important;
-  }
-
   .backdrop-blur {
     --tw-backdrop-blur: blur(8px);
     -webkit-backdrop-filter: var(--tw-backdrop-blur, ) var(--tw-backdrop-brightness, ) var(--tw-backdrop-contrast, ) var(--tw-backdrop-grayscale, ) var(--tw-backdrop-hue-rotate, ) var(--tw-backdrop-invert, ) var(--tw-backdrop-opacity, ) var(--tw-backdrop-saturate, ) var(--tw-backdrop-sepia, );
@@ -4213,10 +4201,6 @@
   .select-none {
     -webkit-user-select: none;
     user-select: none;
-  }
-
-  .\[agentkeepalive\:deprecated\] {
-    agentkeepalive: deprecated;
   }
 
   :where(.divide-x-reverse > :not(:last-child)) {
