@@ -350,13 +350,17 @@ button:focus-visible {
   min-height: 0;
 }
 
-/* Highlight for AI vulnerability line in Monaco */
+/* Improved Monaco AI vulnerability highlight */
 .ai-vuln-highlight {
-  background: linear-gradient(90deg, #ffe6e6 60%, #fffbe6 100%) !important;
-  border-left: 4px solid #e53935 !important;
+  background: rgba(255, 230, 120, 0.38) !important; /* Soft yellow highlight */
+  border-left: 4px solid #f6c700 !important;
+  color: #222 !important;
+  box-shadow: 0 1px 0 0 #f6c70033;
 }
+
 .ai-vuln-gutter {
-  background: #e53935 !important;
+  background: none !important;
+  border-left: 4px solid #f6c700 !important;
 }
 
 @media (prefers-color-scheme: light) {

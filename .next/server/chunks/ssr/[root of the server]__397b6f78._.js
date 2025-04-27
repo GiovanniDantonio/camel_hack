@@ -962,7 +962,11 @@ function VSCodeLitePage() {
                                 background: '#222',
                                 color: '#fff',
                                 padding: '0.5em',
-                                borderRadius: 4
+                                borderRadius: 4,
+                                overflowX: 'auto',
+                                maxWidth: '100%',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word'
                             },
                             children: issue.remediation
                         }, void 0, false, {
@@ -1801,8 +1805,12 @@ function VSCodeLitePage() {
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     id: "ai-agent-panel",
                                     style: {
-                                        overflow: 'auto',
-                                        maxHeight: 'calc(100vh - 40px)'
+                                        overflowY: 'auto',
+                                        overflowX: 'hidden',
+                                        maxHeight: 'calc(80vh - 40px)',
+                                        width: '100%',
+                                        wordBreak: 'break-word',
+                                        whiteSpace: 'pre-line'
                                     },
                                     children: renderAIAgentPanel()
                                 }, void 0, false, {

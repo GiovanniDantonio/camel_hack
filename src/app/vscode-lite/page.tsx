@@ -464,7 +464,7 @@ export default function VSCodeLitePage() {
         {issue.remediation && (
           <div style={{ marginBottom: '0.5em' }}>
             <b>Recommended Fix:</b><br />
-            <pre style={{ background: '#222', color: '#fff', padding: '0.5em', borderRadius: 4 }}>{issue.remediation}</pre>
+            <pre style={{ background: '#222', color: '#fff', padding: '0.5em', borderRadius: 4, overflowX: 'auto', maxWidth: '100%', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{issue.remediation}</pre>
           </div>
         )}
         <button
@@ -714,7 +714,7 @@ export default function VSCodeLitePage() {
           <div id="rightsidebar-toggle" onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}><span className="codicon codicon-chevron-right"></span></div>
           <div id="ai-agent-header">AI Agent</div>
           <div id="ai-agent-content">
-            <div id="ai-agent-panel" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 40px)' }}>
+            <div id="ai-agent-panel" style={{ overflowY: 'auto', overflowX: 'hidden', maxHeight: 'calc(80vh - 40px)', width: '100%', wordBreak: 'break-word', whiteSpace: 'pre-line' }}>
               {renderAIAgentPanel()}
             </div>
           </div>

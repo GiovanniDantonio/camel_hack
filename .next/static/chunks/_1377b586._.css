@@ -363,12 +363,15 @@ button:focus, button:focus-visible {
 }
 
 .ai-vuln-highlight {
-  background: linear-gradient(90deg, #ffe6e6 60%, #fffbe6 100%) !important;
-  border-left: 4px solid #e53935 !important;
+  box-shadow: 0 1px #f6c70033;
+  background: #ffe67861 !important;
+  border-left: 4px solid #f6c700 !important;
+  color: #222 !important;
 }
 
 .ai-vuln-gutter {
-  background: #e53935 !important;
+  background: none !important;
+  border-left: 4px solid #f6c700 !important;
 }
 
 @media (prefers-color-scheme: light) {
