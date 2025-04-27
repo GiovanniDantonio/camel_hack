@@ -637,7 +637,7 @@ class OpenAIService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$
         return model;
     }
     getDefaultModel() {
-        return "openai/o4-mini-high";
+        return OpenAIModel.O4_MINI;
     }
 }
 // Register the provider
@@ -927,6 +927,7 @@ ${vulnerabilityList.length > 0 ? vulnerabilityList.map((vuln, index)=>`${index +
 /**
  * Apply the voting mechanism to determine which vulnerabilities have consensus
  */ function applyVotingMechanism(allResults, path, projectId, prompt) {
+    console.log(`[VulnerabilityAgent] Raw votes for ${path}:`, Array.from(allResults.entries()));
     // Map to hold vulnerabilities by a composite key for voting
     const vulnerabilityVotes = new Map();
     // Count how many models detected each vulnerability
@@ -965,10 +966,10 @@ ${vulnerabilityList.length > 0 ? vulnerabilityList.map((vuln, index)=>`${index +
     const vulnArray = Array.from(vulnerabilityVotes.values());
     const totalModels = allResults.length;
     // Keep vulnerabilities with ≥50% consensus
-    const consensusVulns = vulnArray.filter((v)=>v.votes / totalModels >= 0.2).sort((a, b)=>b.votes - a.votes);
+    const consensusVulns = vulnArray.filter((v)=>v.votes / totalModels >= 0.05).sort((a, b)=>b.votes - a.votes);
     console.log(`[VulnerabilityAgent] Voting results for ${path}:`);
     console.log(`- Total unique vulnerabilities found: ${vulnArray.length}`);
-    console.log(`- Vulnerabilities with ≥20% consensus: ${consensusVulns.length}/${totalModels}`);
+    console.log(`- Vulnerabilities with ≥5% consensus: ${consensusVulns.length}/${totalModels}`);
     // Convert back to Vulnerability[] format
     return consensusVulns.map((vote)=>{
         const vuln = vote.vulnerability;
@@ -1115,7 +1116,7 @@ async function runVulnerabilityAgent(projectId, branch, commit, path, vulnerabil
     if (!useVoting) {
         // We don't need to get a specific client anymore since our service handles that
         // Call the chosen model with the prompt
-        const completion = await callSingleModel(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.GEMINI_2_5, prompt);
+        const completion = await callSingleModel(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.O4_MINI, prompt);
         return parseVulnerabilityResponse(completion, path, projectId, prompt);
     }
     // Use voting with multiple models in parallel
@@ -1125,12 +1126,7 @@ async function runVulnerabilityAgent(projectId, branch, commit, path, vulnerabil
     // -------------------------------------------------------------
     const modelConfigs = [
         ...Array.from({
-            length: 30
-        }, ()=>({
-                model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.GEMINI_2_5
-            })),
-        ...Array.from({
-            length: 30
+            length: 50
         }, ()=>({
                 model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.O4_MINI
             }))
@@ -1140,6 +1136,7 @@ async function runVulnerabilityAgent(projectId, branch, commit, path, vulnerabil
         return Promise.all(modelConfigs.filter((cfg)=>!!cfg.model).map((cfg)=>callModelWithErrorHandling(cfg.model, p)));
     }
     let modelResults = await invokeModels(prompt);
+    console.log(`[VulnerabilityAgent] Raw model results for ${path}:`, modelResults);
     // Detect context window errors (sentinel { __tooLarge: true })
     const exceeded = modelResults.some((r)=>r?.__tooLarge);
     if (exceeded) {
@@ -1175,6 +1172,7 @@ async function runVulnerabilityAgent(projectId, branch, commit, path, vulnerabil
             results: result ? parseVulnerabilityResponse(result, path, projectId, prompt) : [],
             source: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].getProviderName(modelConfigs[index].model)
         }));
+    console.log(`[VulnerabilityAgent] Parsed model vulnerabilities for ${path}:`, vulnerabilityResults);
     // Apply voting mechanism
     return applyVotingMechanism(vulnerabilityResults, path, projectId, prompt);
 }
