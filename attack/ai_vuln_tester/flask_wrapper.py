@@ -95,10 +95,20 @@ def handle_test_stream_request():
 
     def generate_results():
         try:
-            for result in run_scan_tests(scan_report, query_limit):
+            for item in run_scan_tests(scan_report, query_limit):
                 # Format for SSE: data: <json_string>\n\n
-                result_json = result.model_dump_json() # Use Pydantic's JSON dump
-                yield f"data: {result_json}\n\n"
+                if isinstance(item, dict) and item.get("type") == "status":
+                    # Send as a custom 'status' event
+                    status_data = json.dumps({"message": item.get("message", "")})
+                    yield f"event: status\ndata: {status_data}\n\n"
+                elif isinstance(item, VulnerabilityTestResult):
+                    # Send actual results as default 'data' event
+                    result_json = item.model_dump_json()
+                    yield f"data: {result_json}\n\n"
+                else:
+                    # Log unexpected item type if necessary
+                    logging.warning(f"run_scan_tests yielded unexpected type: {type(item)}")
+
             # Signal end (optional)
             yield f"event: end\ndata: {{}}\n\n"
         except Exception as e:

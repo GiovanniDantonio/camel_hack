@@ -294,10 +294,14 @@ def test_vulnerability(vuln: VulnerabilityIndication, source_details: str, query
 # --- Main Test Runner Function ---
 
 def run_scan_tests(scan_report: ScanReport, query_limit: int):
-    """Runs vulnerability tests based on a scan report object, yielding results."""
+    """Runs vulnerability tests based on a scan report object, yielding results/status."""
+    # Yield initial status
+    yield {"type": "status", "message": f"Starting tests for scan {scan_report.scan_metadata.scan_id}..."}
     logging.info(f"Starting tests for {len(scan_report.vulnerabilities)} vulnerabilities from scan '{scan_report.scan_metadata.scan_id}'. Query limit per vuln: {query_limit}")
 
-    for vuln in scan_report.vulnerabilities:
+    for vuln_index, vuln in enumerate(scan_report.vulnerabilities):
+        # Yield status before starting this vulnerability test
+        yield {"type": "status", "message": f"[{vuln_index+1}/{len(scan_report.vulnerabilities)}] Starting test for {vuln.id} ({vuln.potential_exploit_type})..."}
         current_result: Optional[VulnerabilityTestResult] = None
         # Add safety check for target_url_base if needed
         if not vuln.target_url_base or not vuln.target_url_base.startswith(('http://', 'https://')):
@@ -344,7 +348,8 @@ def run_scan_tests(scan_report: ScanReport, query_limit: int):
         else:
             logging.info(f"Result for {vuln.id} ({vuln.potential_exploit_type}): Failure ({current_result.queries_used} queries)")
 
-        print("-" * 30) # Separator
+    # Yield final completion status
+    yield {"type": "status", "message": "All vulnerability tests completed."}
 
 # --- Main Execution (for command-line use) ---
 
