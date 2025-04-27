@@ -275,7 +275,7 @@ const MonacoEditor = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_mo
 function VSCodeLitePage() {
     // Sidebar and right sidebar state
     const [sidebarCollapsed, setSidebarCollapsed] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useState(false);
-    const [rightSidebarCollapsed, setRightSidebarCollapsed] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useState(true);
+    const [rightSidebarCollapsed, setRightSidebarCollapsed] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useState(false); // Open AI Agent panel by default
     const [terminalCollapsed, setTerminalCollapsed] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useState(false);
     const [activeTab, setActiveTab] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useState('explorer');
     const [activeTerminalTab, setActiveTerminalTab] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].useState(0);
@@ -810,13 +810,36 @@ function VSCodeLitePage() {
         let issue;
         const state = undefined;
     }
-    // On mount, parse query params
+    // On mount, parse query params and listen for URL changes
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
-        setDeepLink(parseQuery());
+        function updateDeepLinkFromQuery() {
+            setDeepLink(parseQuery());
+        }
+        updateDeepLinkFromQuery();
+        window.addEventListener('popstate', updateDeepLinkFromQuery);
+        window.addEventListener('pushstate', updateDeepLinkFromQuery);
+        window.addEventListener('replacestate', updateDeepLinkFromQuery);
+        return ()=>{
+            window.removeEventListener('popstate', updateDeepLinkFromQuery);
+            window.removeEventListener('pushstate', updateDeepLinkFromQuery);
+            window.removeEventListener('replacestate', updateDeepLinkFromQuery);
+        };
     }, []);
     // --- AI Agent Panel Content as React ---
     function renderAIAgentPanel() {
-        if (!deepLink.issue) return null;
+        // DEBUG: Log deepLink.issue to help diagnose rendering
+        console.log('renderAIAgentPanel: deepLink.issue', deepLink.issue);
+        if (!deepLink.issue) return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            style: {
+                padding: '1em',
+                color: '#888'
+            },
+            children: "No vulnerability selected or found in the URL."
+        }, void 0, false, {
+            fileName: "[project]/src/app/vscode-lite/page.tsx",
+            lineNumber: 455,
+            columnNumber: 7
+        }, this);
         const issue = deepLink.issue;
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             style: {
@@ -833,7 +856,7 @@ function VSCodeLitePage() {
                     children: issue.title
                 }, void 0, false, {
                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                    lineNumber: 432,
+                    lineNumber: 460,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -845,7 +868,7 @@ function VSCodeLitePage() {
                             children: "Severity:"
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 433,
+                            lineNumber: 461,
                             columnNumber: 48
                         }, this),
                         " ",
@@ -853,7 +876,7 @@ function VSCodeLitePage() {
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                    lineNumber: 433,
+                    lineNumber: 461,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -865,7 +888,7 @@ function VSCodeLitePage() {
                             children: "File:"
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 434,
+                            lineNumber: 462,
                             columnNumber: 48
                         }, this),
                         " ",
@@ -873,7 +896,7 @@ function VSCodeLitePage() {
                             children: issue.file_path || ''
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 434,
+                            lineNumber: 462,
                             columnNumber: 61
                         }, this),
                         " ",
@@ -881,7 +904,7 @@ function VSCodeLitePage() {
                             children: "Line:"
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 434,
+                            lineNumber: 462,
                             columnNumber: 98
                         }, this),
                         " ",
@@ -889,7 +912,7 @@ function VSCodeLitePage() {
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                    lineNumber: 434,
+                    lineNumber: 462,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -901,20 +924,20 @@ function VSCodeLitePage() {
                             children: "Description:"
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 435,
+                            lineNumber: 463,
                             columnNumber: 48
                         }, this),
                         " ",
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("br", {}, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 435,
+                            lineNumber: 463,
                             columnNumber: 68
                         }, this),
                         issue.description || ''
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                    lineNumber: 435,
+                    lineNumber: 463,
                     columnNumber: 9
                 }, this),
                 issue.remediation && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -926,12 +949,12 @@ function VSCodeLitePage() {
                             children: "Recommended Fix:"
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 438,
+                            lineNumber: 466,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("br", {}, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 438,
+                            lineNumber: 466,
                             columnNumber: 36
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("pre", {
@@ -944,13 +967,13 @@ function VSCodeLitePage() {
                             children: issue.remediation
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 439,
+                            lineNumber: 467,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                    lineNumber: 437,
+                    lineNumber: 465,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -968,13 +991,13 @@ function VSCodeLitePage() {
                     children: "Auto-Fix with AI"
                 }, void 0, false, {
                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                    lineNumber: 442,
+                    lineNumber: 470,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/vscode-lite/page.tsx",
-            lineNumber: 431,
+            lineNumber: 459,
             columnNumber: 7
         }, this);
     }
@@ -986,57 +1009,98 @@ function VSCodeLitePage() {
     }, [
         deepLink.issue
     ]);
-    // --- Open AI Agent Panel by default ---
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
-        setRightSidebarCollapsed(false);
-    }, []);
     // --- Panel Toggle Buttons ---
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
-        // Add floating set of panel toggle buttons for left, right, and bottom panels
-        const panelToggleButtons = document.getElementById('panel-toggle-buttons');
-        if (!panelToggleButtons) {
-            const container = document.getElementById('container');
-            if (container) {
-                const buttons = document.createElement('div');
-                buttons.id = 'panel-toggle-buttons';
-                buttons.style.position = 'absolute';
-                buttons.style.top = '12px';
-                buttons.style.right = '60px';
-                buttons.style.zIndex = '30';
-                buttons.style.display = 'flex';
-                buttons.style.gap = '8px';
-                const leftButton = document.createElement('button');
-                leftButton.className = 'vsc-btn';
-                leftButton.title = sidebarCollapsed ? 'Open Left Sidebar' : 'Close Left Sidebar';
-                leftButton.onclick = ()=>setSidebarCollapsed(!sidebarCollapsed);
-                const leftIcon = document.createElement('span');
-                leftIcon.className = `codicon ${sidebarCollapsed ? 'codicon-chevron-right' : 'codicon-chevron-left'}`;
-                leftButton.appendChild(leftIcon);
-                buttons.appendChild(leftButton);
-                const bottomButton = document.createElement('button');
-                bottomButton.className = 'vsc-btn';
-                bottomButton.title = terminalCollapsed ? 'Open Bottom Panel' : 'Close Bottom Panel';
-                bottomButton.onclick = ()=>setTerminalCollapsed(!terminalCollapsed);
-                const bottomIcon = document.createElement('span');
-                bottomIcon.className = `codicon ${terminalCollapsed ? 'codicon-chevron-up' : 'codicon-chevron-down'}`;
-                bottomButton.appendChild(bottomIcon);
-                buttons.appendChild(bottomButton);
-                const rightButton = document.createElement('button');
-                rightButton.className = 'vsc-btn';
-                rightButton.title = rightSidebarCollapsed ? 'Open AI Agent Panel' : 'Close AI Agent Panel';
-                rightButton.onclick = ()=>setRightSidebarCollapsed(!rightSidebarCollapsed);
-                const rightIcon = document.createElement('span');
-                rightIcon.className = `codicon ${rightSidebarCollapsed ? 'codicon-chevron-left' : 'codicon-chevron-right'}`;
-                rightButton.appendChild(rightIcon);
-                buttons.appendChild(rightButton);
-                container.appendChild(buttons);
-            }
-        }
-    }, [
-        sidebarCollapsed,
-        terminalCollapsed,
-        rightSidebarCollapsed
-    ]);
+    function renderPanelToggles() {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            id: "panel-toggles",
+            style: {
+                position: 'absolute',
+                top: 6,
+                right: 12,
+                zIndex: 20,
+                display: 'flex',
+                gap: 8
+            },
+            children: [
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                    className: "vsc-btn",
+                    title: sidebarCollapsed ? 'Open Left Sidebar' : 'Close Left Sidebar',
+                    onClick: ()=>setSidebarCollapsed((prev)=>!prev),
+                    style: {
+                        background: sidebarCollapsed ? '#31313a' : '#23272e',
+                        color: sidebarCollapsed ? '#3794ff' : '#fff',
+                        borderRadius: 4,
+                        border: 'none',
+                        padding: '4px 8px',
+                        cursor: 'pointer'
+                    },
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        className: `codicon ${sidebarCollapsed ? 'codicon-chevron-right' : 'codicon-chevron-left'}`
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/vscode-lite/page.tsx",
+                        lineNumber: 498,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
+                    fileName: "[project]/src/app/vscode-lite/page.tsx",
+                    lineNumber: 492,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                    className: "vsc-btn",
+                    title: rightSidebarCollapsed ? 'Open AI Agent Panel' : 'Close AI Agent Panel',
+                    onClick: ()=>setRightSidebarCollapsed((prev)=>!prev),
+                    style: {
+                        background: rightSidebarCollapsed ? '#31313a' : '#23272e',
+                        color: rightSidebarCollapsed ? '#3794ff' : '#fff',
+                        borderRadius: 4,
+                        border: 'none',
+                        padding: '4px 8px',
+                        cursor: 'pointer'
+                    },
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        className: `codicon ${rightSidebarCollapsed ? 'codicon-chevron-left' : 'codicon-chevron-right'}`
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/vscode-lite/page.tsx",
+                        lineNumber: 506,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
+                    fileName: "[project]/src/app/vscode-lite/page.tsx",
+                    lineNumber: 500,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                    className: "vsc-btn",
+                    title: terminalCollapsed ? 'Open Bottom Panel' : 'Close Bottom Panel',
+                    onClick: ()=>setTerminalCollapsed((prev)=>!prev),
+                    style: {
+                        background: terminalCollapsed ? '#31313a' : '#23272e',
+                        color: terminalCollapsed ? '#3794ff' : '#fff',
+                        borderRadius: 4,
+                        border: 'none',
+                        padding: '4px 8px',
+                        cursor: 'pointer'
+                    },
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        className: `codicon ${terminalCollapsed ? 'codicon-chevron-up' : 'codicon-chevron-down'}`
+                    }, void 0, false, {
+                        fileName: "[project]/src/app/vscode-lite/page.tsx",
+                        lineNumber: 514,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
+                    fileName: "[project]/src/app/vscode-lite/page.tsx",
+                    lineNumber: 508,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "[project]/src/app/vscode-lite/page.tsx",
+            lineNumber: 491,
+            columnNumber: 7
+        }, this);
+    }
     // Sidebar views logic
     function renderSidebarView() {
         switch(activeTab){
@@ -1067,7 +1131,7 @@ function VSCodeLitePage() {
                                     children: "GitHub Repo:"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                    lineNumber: 521,
+                                    lineNumber: 528,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -1090,7 +1154,7 @@ function VSCodeLitePage() {
                                             children: "Select a repository..."
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                            lineNumber: 527,
+                                            lineNumber: 534,
                                             columnNumber: 17
                                         }, this),
                                         githubRepos.map((r)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1098,13 +1162,13 @@ function VSCodeLitePage() {
                                                 children: r.fullName || r.full_name
                                             }, r.fullName || r.full_name, false, {
                                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                                lineNumber: 529,
+                                                lineNumber: 536,
                                                 columnNumber: 19
                                             }, this))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                    lineNumber: 522,
+                                    lineNumber: 529,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1121,13 +1185,13 @@ function VSCodeLitePage() {
                                     children: "Root"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                    lineNumber: 534,
+                                    lineNumber: 541,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 520,
+                            lineNumber: 527,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1142,13 +1206,13 @@ function VSCodeLitePage() {
                             children: repo ? renderGithubTree(githubFiles) : renderFolderTree(folderTree)
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 537,
+                            lineNumber: 544,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                    lineNumber: 518,
+                    lineNumber: 525,
                     columnNumber: 11
                 }, this);
             case 'search':
@@ -1166,20 +1230,20 @@ function VSCodeLitePage() {
                             }
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 549,
+                            lineNumber: 556,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             id: "search-results"
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 550,
+                            lineNumber: 557,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                    lineNumber: 548,
+                    lineNumber: 555,
                     columnNumber: 11
                 }, this);
             case 'scm':
@@ -1189,7 +1253,7 @@ function VSCodeLitePage() {
                     children: "Source Control coming soon..."
                 }, void 0, false, {
                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                    lineNumber: 555,
+                    lineNumber: 562,
                     columnNumber: 11
                 }, this);
             case 'run':
@@ -1199,7 +1263,7 @@ function VSCodeLitePage() {
                     children: "Run & Debug coming soon..."
                 }, void 0, false, {
                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                    lineNumber: 559,
+                    lineNumber: 566,
                     columnNumber: 11
                 }, this);
             case 'extensions':
@@ -1209,7 +1273,7 @@ function VSCodeLitePage() {
                     children: "Extensions coming soon..."
                 }, void 0, false, {
                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                    lineNumber: 563,
+                    lineNumber: 570,
                     columnNumber: 11
                 }, this);
             default:
@@ -1245,9 +1309,10 @@ function VSCodeLitePage() {
                 rel: "stylesheet"
             }, void 0, false, {
                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                lineNumber: 587,
+                lineNumber: 594,
                 columnNumber: 7
             }, this),
+            renderPanelToggles(),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 id: "toolbar",
                 style: {
@@ -1275,14 +1340,14 @@ function VSCodeLitePage() {
                                 }
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 589,
+                                lineNumber: 597,
                                 columnNumber: 103
                             }, this),
                             "New File"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 589,
+                        lineNumber: 597,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1297,14 +1362,14 @@ function VSCodeLitePage() {
                                 }
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 590,
+                                lineNumber: 598,
                                 columnNumber: 81
                             }, this),
                             "Save"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 590,
+                        lineNumber: 598,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1319,14 +1384,14 @@ function VSCodeLitePage() {
                                 }
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 591,
+                                lineNumber: 599,
                                 columnNumber: 109
                             }, this),
                             "Rename"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 591,
+                        lineNumber: 599,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1341,14 +1406,14 @@ function VSCodeLitePage() {
                                 }
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 592,
+                                lineNumber: 600,
                                 columnNumber: 109
                             }, this),
                             "Delete"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 592,
+                        lineNumber: 600,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1368,19 +1433,19 @@ function VSCodeLitePage() {
                                 children: "*"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 593,
+                                lineNumber: 601,
                                 columnNumber: 142
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 593,
+                        lineNumber: 601,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                lineNumber: 588,
+                lineNumber: 596,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1419,7 +1484,7 @@ function VSCodeLitePage() {
                             children: "*"
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 597,
+                            lineNumber: 605,
                             columnNumber: 58
                         }, this),
                         " ",
@@ -1430,18 +1495,18 @@ function VSCodeLitePage() {
                             }
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 597,
+                            lineNumber: 605,
                             columnNumber: 115
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                    lineNumber: 596,
+                    lineNumber: 604,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                lineNumber: 595,
+                lineNumber: 603,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1478,12 +1543,12 @@ function VSCodeLitePage() {
                                 }
                             }, tab.key, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 603,
+                                lineNumber: 611,
                                 columnNumber: 13
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 601,
+                        lineNumber: 609,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1509,12 +1574,12 @@ function VSCodeLitePage() {
                                     className: "codicon codicon-chevron-left"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                    lineNumber: 629,
+                                    lineNumber: 637,
                                     columnNumber: 91
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 629,
+                                lineNumber: 637,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1522,7 +1587,7 @@ function VSCodeLitePage() {
                                 children: activityTabs.find((t)=>t.key === activeTab)?.title ?? ''
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 630,
+                                lineNumber: 638,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1530,7 +1595,7 @@ function VSCodeLitePage() {
                                 children: !sidebarCollapsed && renderSidebarView()
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 631,
+                                lineNumber: 639,
                                 columnNumber: 11
                             }, this),
                             !sidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1538,13 +1603,13 @@ function VSCodeLitePage() {
                                 onMouseDown: handleSidebarResizeStart
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 636,
+                                lineNumber: 644,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 613,
+                        lineNumber: 621,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1579,12 +1644,12 @@ function VSCodeLitePage() {
                                     onMount: handleEditorMount
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                    lineNumber: 644,
+                                    lineNumber: 652,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 643,
+                                lineNumber: 651,
                                 columnNumber: 11
                             }, this),
                             !terminalCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1627,13 +1692,13 @@ function VSCodeLitePage() {
                                                             children: "×"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                                            lineNumber: 673,
+                                                            lineNumber: 681,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, t.id, true, {
                                                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                                    lineNumber: 659,
+                                                    lineNumber: 667,
                                                     columnNumber: 19
                                                 }, this)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1649,13 +1714,13 @@ function VSCodeLitePage() {
                                                 children: "+"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                                lineNumber: 680,
+                                                lineNumber: 688,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                        lineNumber: 657,
+                                        lineNumber: 665,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1669,29 +1734,29 @@ function VSCodeLitePage() {
                                                 },
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$vscode$2d$lite$2f$Terminal$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, t.id, false, {
                                                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                                    lineNumber: 685,
+                                                    lineNumber: 693,
                                                     columnNumber: 21
                                                 }, this)
                                             }, t.id, false, {
                                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                                lineNumber: 684,
+                                                lineNumber: 692,
                                                 columnNumber: 19
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                        lineNumber: 682,
+                                        lineNumber: 690,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 656,
+                                lineNumber: 664,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 642,
+                        lineNumber: 650,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1715,12 +1780,12 @@ function VSCodeLitePage() {
                                     className: "codicon codicon-chevron-right"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                    lineNumber: 706,
+                                    lineNumber: 714,
                                     columnNumber: 106
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 706,
+                                lineNumber: 714,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1728,27 +1793,26 @@ function VSCodeLitePage() {
                                 children: "AI Agent"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 707,
+                                lineNumber: 715,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 id: "ai-agent-content",
-                                style: {
-                                    padding: '0 8px 8px 8px',
-                                    maxHeight: 'calc(100vh - 80px)',
-                                    overflowY: 'auto'
-                                },
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     id: "ai-agent-panel",
+                                    style: {
+                                        overflow: 'auto',
+                                        maxHeight: 'calc(100vh - 40px)'
+                                    },
                                     children: renderAIAgentPanel()
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                    lineNumber: 709,
+                                    lineNumber: 717,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 708,
+                                lineNumber: 716,
                                 columnNumber: 11
                             }, this),
                             !rightSidebarCollapsed && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1756,13 +1820,13 @@ function VSCodeLitePage() {
                                 onMouseDown: handleRightSidebarResizeStart
                             }, void 0, false, {
                                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                                lineNumber: 715,
+                                lineNumber: 723,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 692,
+                        lineNumber: 700,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1774,18 +1838,18 @@ function VSCodeLitePage() {
                             onClick: handleAIAgentToggle
                         }, void 0, false, {
                             fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 722,
+                            lineNumber: 730,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 721,
+                        lineNumber: 729,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                lineNumber: 600,
+                lineNumber: 608,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1799,7 +1863,7 @@ function VSCodeLitePage() {
                         children: "VSCode Lite"
                     }, void 0, false, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 726,
+                        lineNumber: 734,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1807,7 +1871,7 @@ function VSCodeLitePage() {
                         children: currentFile.endsWith('.md') ? 'Markdown' : 'JavaScript'
                     }, void 0, false, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 727,
+                        lineNumber: 735,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1815,7 +1879,7 @@ function VSCodeLitePage() {
                         children: "UTF-8"
                     }, void 0, false, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 728,
+                        lineNumber: 736,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1823,129 +1887,19 @@ function VSCodeLitePage() {
                         children: "LF"
                     }, void 0, false, {
                         fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 729,
+                        lineNumber: 737,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/vscode-lite/page.tsx",
-                lineNumber: 725,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                style: {
-                    position: 'absolute',
-                    top: 18,
-                    right: 22,
-                    zIndex: 40,
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: 10
-                },
-                children: [
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                        "aria-label": sidebarCollapsed ? 'Open Left Sidebar' : 'Close Left Sidebar',
-                        title: sidebarCollapsed ? 'Open Left Sidebar' : 'Close Left Sidebar',
-                        onClick: ()=>setSidebarCollapsed(!sidebarCollapsed),
-                        style: {
-                            background: sidebarCollapsed ? '#23272e' : '#23272e',
-                            border: 'none',
-                            borderRadius: 4,
-                            width: 32,
-                            height: 32,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: sidebarCollapsed ? '0 0 0 2px #3794ff' : 'none',
-                            cursor: 'pointer',
-                            transition: 'background 0.15s, box-shadow 0.15s',
-                            outline: sidebarCollapsed ? '2px solid #3794ff' : 'none',
-                            color: sidebarCollapsed ? '#3794ff' : '#d4d4d4'
-                        },
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                            className: `codicon ${sidebarCollapsed ? 'codicon-chevron-right' : 'codicon-chevron-left'}`
-                        }, void 0, false, {
-                            fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 764,
-                            columnNumber: 11
-                        }, this)
-                    }, void 0, false, {
-                        fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 744,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                        "aria-label": terminalCollapsed ? 'Open Bottom Panel' : 'Close Bottom Panel',
-                        title: terminalCollapsed ? 'Open Bottom Panel' : 'Close Bottom Panel',
-                        onClick: ()=>setTerminalCollapsed(!terminalCollapsed),
-                        style: {
-                            background: terminalCollapsed ? '#23272e' : '#23272e',
-                            border: 'none',
-                            borderRadius: 4,
-                            width: 32,
-                            height: 32,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: terminalCollapsed ? '0 0 0 2px #3794ff' : 'none',
-                            cursor: 'pointer',
-                            transition: 'background 0.15s, box-shadow 0.15s',
-                            outline: terminalCollapsed ? '2px solid #3794ff' : 'none',
-                            color: terminalCollapsed ? '#3794ff' : '#d4d4d4'
-                        },
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                            className: `codicon ${terminalCollapsed ? 'codicon-chevron-up' : 'codicon-chevron-down'}`
-                        }, void 0, false, {
-                            fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 787,
-                            columnNumber: 11
-                        }, this)
-                    }, void 0, false, {
-                        fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 767,
-                        columnNumber: 9
-                    }, this),
-                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                        "aria-label": rightSidebarCollapsed ? 'Open AI Agent Panel' : 'Close AI Agent Panel',
-                        title: rightSidebarCollapsed ? 'Open AI Agent Panel' : 'Close AI Agent Panel',
-                        onClick: ()=>setRightSidebarCollapsed(!rightSidebarCollapsed),
-                        style: {
-                            background: rightSidebarCollapsed ? '#23272e' : '#23272e',
-                            border: 'none',
-                            borderRadius: 4,
-                            width: 32,
-                            height: 32,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: rightSidebarCollapsed ? '0 0 0 2px #3794ff' : 'none',
-                            cursor: 'pointer',
-                            transition: 'background 0.15s, box-shadow 0.15s',
-                            outline: rightSidebarCollapsed ? '2px solid #3794ff' : 'none',
-                            color: rightSidebarCollapsed ? '#3794ff' : '#d4d4d4'
-                        },
-                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                            className: `codicon ${rightSidebarCollapsed ? 'codicon-chevron-left' : 'codicon-chevron-right'}`
-                        }, void 0, false, {
-                            fileName: "[project]/src/app/vscode-lite/page.tsx",
-                            lineNumber: 810,
-                            columnNumber: 11
-                        }, this)
-                    }, void 0, false, {
-                        fileName: "[project]/src/app/vscode-lite/page.tsx",
-                        lineNumber: 790,
-                        columnNumber: 9
-                    }, this)
-                ]
-            }, void 0, true, {
-                fileName: "[project]/src/app/vscode-lite/page.tsx",
-                lineNumber: 732,
+                lineNumber: 733,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/vscode-lite/page.tsx",
-        lineNumber: 586,
+        lineNumber: 593,
         columnNumber: 5
     }, this);
 }

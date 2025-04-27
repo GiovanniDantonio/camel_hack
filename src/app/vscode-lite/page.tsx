@@ -44,7 +44,7 @@ type DeepLinkState = {
 export default function VSCodeLitePage() {
   // Sidebar and right sidebar state
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
-  const [rightSidebarCollapsed, setRightSidebarCollapsed] = React.useState(true);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = React.useState(false); // Open AI Agent panel by default
   const [terminalCollapsed, setTerminalCollapsed] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('explorer');
   const [activeTerminalTab, setActiveTerminalTab] = React.useState(0);
@@ -400,9 +400,22 @@ export default function VSCodeLitePage() {
     let issue: DeepLinkIssue | undefined = undefined;
     try {
       const raw = params.get('issue');
-      issue = raw ? JSON.parse(decodeURIComponent(raw)) : undefined;
-      // DEBUG: log the parsed issue for troubleshooting
       console.log('parseQuery: issue param (raw):', raw);
+      if (raw) {
+        // Try both decodeURIComponent and direct JSON.parse for robustness
+        let decoded = raw;
+        try {
+          decoded = decodeURIComponent(raw);
+        } catch (e) {
+          console.warn('parseQuery: decodeURIComponent failed, using raw', e);
+        }
+        try {
+          issue = JSON.parse(decoded);
+        } catch (e) {
+          console.error('parseQuery: JSON.parse failed for issue param', decoded, e);
+          issue = undefined;
+        }
+      }
       console.log('parseQuery: parsed issue:', issue);
     } catch (e) {
       console.error('parseQuery: failed to parse issue param:', e);
@@ -418,14 +431,29 @@ export default function VSCodeLitePage() {
     return state;
   }
 
-  // On mount, parse query params
+  // On mount, parse query params and listen for URL changes
   useEffect(() => {
-    setDeepLink(parseQuery());
+    function updateDeepLinkFromQuery() {
+      setDeepLink(parseQuery());
+    }
+    updateDeepLinkFromQuery();
+    window.addEventListener('popstate', updateDeepLinkFromQuery);
+    window.addEventListener('pushstate', updateDeepLinkFromQuery);
+    window.addEventListener('replacestate', updateDeepLinkFromQuery);
+    return () => {
+      window.removeEventListener('popstate', updateDeepLinkFromQuery);
+      window.removeEventListener('pushstate', updateDeepLinkFromQuery);
+      window.removeEventListener('replacestate', updateDeepLinkFromQuery);
+    };
   }, []);
 
   // --- AI Agent Panel Content as React ---
   function renderAIAgentPanel() {
-    if (!deepLink.issue) return null;
+    // DEBUG: Log deepLink.issue to help diagnose rendering
+    console.log('renderAIAgentPanel: deepLink.issue', deepLink.issue);
+    if (!deepLink.issue) return (
+      <div style={{ padding: '1em', color: '#888' }}>No vulnerability selected or found in the URL.</div>
+    );
     const issue = deepLink.issue;
     return (
       <div style={{ padding: '1em' }}>
@@ -457,58 +485,37 @@ export default function VSCodeLitePage() {
     }
   }, [deepLink.issue]);
 
-  // --- Open AI Agent Panel by default ---
-  useEffect(() => {
-    setRightSidebarCollapsed(false);
-  }, []);
-
   // --- Panel Toggle Buttons ---
-  useEffect(() => {
-    // Add floating set of panel toggle buttons for left, right, and bottom panels
-    const panelToggleButtons = document.getElementById('panel-toggle-buttons');
-    if (!panelToggleButtons) {
-      const container = document.getElementById('container');
-      if (container) {
-        const buttons = document.createElement('div');
-        buttons.id = 'panel-toggle-buttons';
-        buttons.style.position = 'absolute';
-        buttons.style.top = '12px';
-        buttons.style.right = '60px';
-        buttons.style.zIndex = '30';
-        buttons.style.display = 'flex';
-        buttons.style.gap = '8px';
-
-        const leftButton = document.createElement('button');
-        leftButton.className = 'vsc-btn';
-        leftButton.title = sidebarCollapsed ? 'Open Left Sidebar' : 'Close Left Sidebar';
-        leftButton.onclick = () => setSidebarCollapsed(!sidebarCollapsed);
-        const leftIcon = document.createElement('span');
-        leftIcon.className = `codicon ${sidebarCollapsed ? 'codicon-chevron-right' : 'codicon-chevron-left'}`;
-        leftButton.appendChild(leftIcon);
-        buttons.appendChild(leftButton);
-
-        const bottomButton = document.createElement('button');
-        bottomButton.className = 'vsc-btn';
-        bottomButton.title = terminalCollapsed ? 'Open Bottom Panel' : 'Close Bottom Panel';
-        bottomButton.onclick = () => setTerminalCollapsed(!terminalCollapsed);
-        const bottomIcon = document.createElement('span');
-        bottomIcon.className = `codicon ${terminalCollapsed ? 'codicon-chevron-up' : 'codicon-chevron-down'}`;
-        bottomButton.appendChild(bottomIcon);
-        buttons.appendChild(bottomButton);
-
-        const rightButton = document.createElement('button');
-        rightButton.className = 'vsc-btn';
-        rightButton.title = rightSidebarCollapsed ? 'Open AI Agent Panel' : 'Close AI Agent Panel';
-        rightButton.onclick = () => setRightSidebarCollapsed(!rightSidebarCollapsed);
-        const rightIcon = document.createElement('span');
-        rightIcon.className = `codicon ${rightSidebarCollapsed ? 'codicon-chevron-left' : 'codicon-chevron-right'}`;
-        rightButton.appendChild(rightIcon);
-        buttons.appendChild(rightButton);
-
-        container.appendChild(buttons);
-      }
-    }
-  }, [sidebarCollapsed, terminalCollapsed, rightSidebarCollapsed]);
+  function renderPanelToggles() {
+    return (
+      <div id="panel-toggles" style={{ position: 'absolute', top: 6, right: 12, zIndex: 20, display: 'flex', gap: 8 }}>
+        <button
+          className="vsc-btn"
+          title={sidebarCollapsed ? 'Open Left Sidebar' : 'Close Left Sidebar'}
+          onClick={() => setSidebarCollapsed((prev) => !prev)}
+          style={{ background: sidebarCollapsed ? '#31313a' : '#23272e', color: sidebarCollapsed ? '#3794ff' : '#fff', borderRadius: 4, border: 'none', padding: '4px 8px', cursor: 'pointer' }}
+        >
+          <span className={`codicon ${sidebarCollapsed ? 'codicon-chevron-right' : 'codicon-chevron-left'}`}></span>
+        </button>
+        <button
+          className="vsc-btn"
+          title={rightSidebarCollapsed ? 'Open AI Agent Panel' : 'Close AI Agent Panel'}
+          onClick={() => setRightSidebarCollapsed((prev) => !prev)}
+          style={{ background: rightSidebarCollapsed ? '#31313a' : '#23272e', color: rightSidebarCollapsed ? '#3794ff' : '#fff', borderRadius: 4, border: 'none', padding: '4px 8px', cursor: 'pointer' }}
+        >
+          <span className={`codicon ${rightSidebarCollapsed ? 'codicon-chevron-left' : 'codicon-chevron-right'}`}></span>
+        </button>
+        <button
+          className="vsc-btn"
+          title={terminalCollapsed ? 'Open Bottom Panel' : 'Close Bottom Panel'}
+          onClick={() => setTerminalCollapsed((prev) => !prev)}
+          style={{ background: terminalCollapsed ? '#31313a' : '#23272e', color: terminalCollapsed ? '#3794ff' : '#fff', borderRadius: 4, border: 'none', padding: '4px 8px', cursor: 'pointer' }}
+        >
+          <span className={`codicon ${terminalCollapsed ? 'codicon-chevron-up' : 'codicon-chevron-down'}`}></span>
+        </button>
+      </div>
+    );
+  }
 
   // Sidebar views logic
   function renderSidebarView() {
@@ -585,6 +592,7 @@ export default function VSCodeLitePage() {
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', background: '#1e1e1e', color: '#d4d4d4', display: 'flex', flexDirection: 'column' }}>
       <link href="https://cdn.jsdelivr.net/npm/@vscode/codicons/dist/codicon.css" rel="stylesheet" />
+      {renderPanelToggles()}
       <div id="toolbar" style={{ flex: '0 0 36px', zIndex: 10, display: 'flex', alignItems: 'center', background: '#23272e', borderBottom: '1px solid #222', height: 36, padding: '0 8px', position: 'relative', gap: 6 }}>
         <button id="new-file-btn" className="vsc-btn" onClick={() => handleToolbarAction('new-file')}><span className="codicon codicon-new-file" style={{marginRight:4}}></span>New File</button>
         <button id="save-file-btn" className="vsc-btn" onClick={handleSaveFile}><span className="codicon codicon-save" style={{marginRight:4}}></span>Save</button>
@@ -705,8 +713,8 @@ export default function VSCodeLitePage() {
         >
           <div id="rightsidebar-toggle" onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}><span className="codicon codicon-chevron-right"></span></div>
           <div id="ai-agent-header">AI Agent</div>
-          <div id="ai-agent-content" style={{ padding: '0 8px 8px 8px', maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
-            <div id="ai-agent-panel">
+          <div id="ai-agent-content">
+            <div id="ai-agent-panel" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 40px)' }}>
               {renderAIAgentPanel()}
             </div>
           </div>
@@ -727,88 +735,6 @@ export default function VSCodeLitePage() {
         <span id="status-language">{currentFile.endsWith('.md') ? 'Markdown' : 'JavaScript'}</span>
         <span id="status-encoding">UTF-8</span>
         <span id="status-eol">LF</span>
-      </div>
-      {/* --- Panel Toggle Buttons: Top Right, VSCode Style --- */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 18,
-          right: 22,
-          zIndex: 40,
-          display: 'flex',
-          flexDirection: 'row',
-          gap: 10
-        }}
-      >
-        {/* Left Sidebar Toggle */}
-        <button
-          aria-label={sidebarCollapsed ? 'Open Left Sidebar' : 'Close Left Sidebar'}
-          title={sidebarCollapsed ? 'Open Left Sidebar' : 'Close Left Sidebar'}
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          style={{
-            background: sidebarCollapsed ? '#23272e' : '#23272e',
-            border: 'none',
-            borderRadius: 4,
-            width: 32,
-            height: 32,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: sidebarCollapsed ? '0 0 0 2px #3794ff' : 'none',
-            cursor: 'pointer',
-            transition: 'background 0.15s, box-shadow 0.15s',
-            outline: sidebarCollapsed ? '2px solid #3794ff' : 'none',
-            color: sidebarCollapsed ? '#3794ff' : '#d4d4d4',
-          }}
-        >
-          <span className={`codicon ${sidebarCollapsed ? 'codicon-chevron-right' : 'codicon-chevron-left'}`}></span>
-        </button>
-        {/* Bottom Panel Toggle */}
-        <button
-          aria-label={terminalCollapsed ? 'Open Bottom Panel' : 'Close Bottom Panel'}
-          title={terminalCollapsed ? 'Open Bottom Panel' : 'Close Bottom Panel'}
-          onClick={() => setTerminalCollapsed(!terminalCollapsed)}
-          style={{
-            background: terminalCollapsed ? '#23272e' : '#23272e',
-            border: 'none',
-            borderRadius: 4,
-            width: 32,
-            height: 32,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: terminalCollapsed ? '0 0 0 2px #3794ff' : 'none',
-            cursor: 'pointer',
-            transition: 'background 0.15s, box-shadow 0.15s',
-            outline: terminalCollapsed ? '2px solid #3794ff' : 'none',
-            color: terminalCollapsed ? '#3794ff' : '#d4d4d4',
-          }}
-        >
-          <span className={`codicon ${terminalCollapsed ? 'codicon-chevron-up' : 'codicon-chevron-down'}`}></span>
-        </button>
-        {/* Right Sidebar (AI Agent) Toggle */}
-        <button
-          aria-label={rightSidebarCollapsed ? 'Open AI Agent Panel' : 'Close AI Agent Panel'}
-          title={rightSidebarCollapsed ? 'Open AI Agent Panel' : 'Close AI Agent Panel'}
-          onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
-          style={{
-            background: rightSidebarCollapsed ? '#23272e' : '#23272e',
-            border: 'none',
-            borderRadius: 4,
-            width: 32,
-            height: 32,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: rightSidebarCollapsed ? '0 0 0 2px #3794ff' : 'none',
-            cursor: 'pointer',
-            transition: 'background 0.15s, box-shadow 0.15s',
-            outline: rightSidebarCollapsed ? '2px solid #3794ff' : 'none',
-            color: rightSidebarCollapsed ? '#3794ff' : '#d4d4d4',
-          }}
-        >
-          <span className={`codicon ${rightSidebarCollapsed ? 'codicon-chevron-left' : 'codicon-chevron-right'}`}></span>
-        </button>
       </div>
     </div>
   );
