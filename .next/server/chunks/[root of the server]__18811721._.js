@@ -1124,8 +1124,41 @@ async function runVulnerabilityAgent(projectId, branch, commit, path, vulnerabil
     }, ()=>({
             model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.O4_MINI
         }));
-    // Call all models in parallel
-    const modelResults = await Promise.all(modelConfigs.map((config)=>callModelWithErrorHandling(config.model, prompt)));
+    // Helper to invoke models (used for full prompt and each chunk)
+    async function invokeModels(p) {
+        return Promise.all(modelConfigs.map((cfg)=>callModelWithErrorHandling(cfg.model, p)));
+    }
+    let modelResults = await invokeModels(prompt);
+    // Detect context window errors (sentinel { __tooLarge: true })
+    const exceeded = modelResults.some((r)=>r?.__tooLarge);
+    if (exceeded) {
+        console.warn(`[VulnerabilityAgent] Context window exceeded for ${path}. Falling back to chunk & stitch strategy`);
+        // Split file into ~300-line chunks (roughly < 30k tokens for safety)
+        const lines = repoContent.content.split("\n");
+        const CHUNK_SIZE = 300;
+        const chunks = [];
+        for(let start = 0; start < lines.length; start += CHUNK_SIZE){
+            const chunkLines = lines.slice(start, start + CHUNK_SIZE);
+            chunks.push({
+                start: start + 1,
+                content: chunkLines.join("\n")
+            });
+        }
+        const allChunkResults = [];
+        for (const chunk of chunks){
+            const chunkPrompt = buildVulnerabilityPrompt(path, `// Chunk starts at line ${chunk.start}\n${chunk.content}`, vulnerabilityList, customVulnerabilities);
+            const chunkModelResults = await invokeModels(chunkPrompt);
+            // Merge
+            chunkModelResults.forEach((res, idx)=>{
+                allChunkResults.push({
+                    results: res ? parseVulnerabilityResponse(res, path, projectId, chunkPrompt) : [],
+                    source: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].getProviderName(modelConfigs[idx].model)
+                });
+            });
+        }
+        // Apply voting across combined chunk results
+        return applyVotingMechanism(allChunkResults, path, projectId, prompt);
+    }
     // Parse results from each model
     const vulnerabilityResults = modelResults.map((result, index)=>({
             results: result ? parseVulnerabilityResponse(result, path, projectId, prompt) : [],

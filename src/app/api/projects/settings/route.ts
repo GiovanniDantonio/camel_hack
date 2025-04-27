@@ -142,7 +142,21 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Delete the project
+    // First, remove dependent rows to satisfy foreign key constraints
+    const { error: attacksDeleteError } = await supabase
+      .from('attacks')
+      .delete()
+      .eq('project_id', projectId);
+
+    if (attacksDeleteError) {
+      console.error('Error deleting related attacks:', attacksDeleteError);
+      return NextResponse.json(
+        { error: 'Failed to delete project related data' },
+        { status: 500 },
+      );
+    }
+
+    // Now delete the project
     const { error: deleteError } = await supabase
       .from('projects')
       .delete()
