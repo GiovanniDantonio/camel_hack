@@ -2,6 +2,16 @@
 
 /* This component should have corresponding styles in globals.css for markdown rendering */
 
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
+import { Menu } from 'lucide-react';
+
 import { AttackComponent } from '@/components/AttackComponent';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -196,44 +206,34 @@ const CodeViewerCard: React.FC<CodeViewerCardProps> = ({
   codeContainerRef,
 }) => {
   return (
-    <div className="border rounded-md overflow-hidden mt-4">
-      {/* Navigation buttons */}
-      {vulnerabilitiesInFile.length > 1 &&
-        !isLoading &&
-        !error &&
-        fileContent && (
-          <div className="flex justify-between items-center p-2 bg-muted/30 border-b">
-            <div className="text-sm">
-              Issue {currentVulnerabilityIndex + 1} of{' '}
-              {vulnerabilitiesInFile.length}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                disabled={currentVulnerabilityIndex <= 0}
-                onClick={goToPreviousVulnerability}
-                title="Previous issue"
-              >
-                <ChevronUp className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                disabled={
-                  currentVulnerabilityIndex === vulnerabilitiesInFile.length - 1
-                }
-                onClick={goToNextVulnerability}
-                title="Next issue"
-              >
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold">Vulnerability Report</h2>
+      </div>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-7 w-7"
+          disabled={currentVulnerabilityIndex <= 0}
+          onClick={goToPreviousVulnerability}
+          title="Previous issue"
+        >
+          <ChevronUp className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-7 w-7"
+          disabled={
+            currentVulnerabilityIndex === vulnerabilitiesInFile.length - 1
+          }
+          onClick={goToNextVulnerability}
+          title="Next issue"
+        >
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </div>
       {/* Code Area */}
       {isLoading ? (
         <div className="flex justify-center items-center py-12">
@@ -401,6 +401,42 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
 // --- Main Page Component ---
 
 export default function VulnerabilitiesPage() {
+  // ...existing hooks
+  const [severityFilter, setSeverityFilter] = useState<string | null>(null);
+  // ...existing hooks
+
+  // --- Hamburger menu filter UI ---
+  const filterMenu = (
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-xl font-semibold">Vulnerability Report</h2>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label="Filter vulnerabilities">
+            <Menu className="h-6 w-6" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Filter by Severity</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setSeverityFilter(null)}>
+            All
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSeverityFilter('critical')}>
+            Critical
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSeverityFilter('high')}>
+            High
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSeverityFilter('medium')}>
+            Medium
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSeverityFilter('low')}>
+            Low
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -415,9 +451,7 @@ export default function VulnerabilitiesPage() {
   const { resolvedTheme: theme } = useTheme();
   const isDarkTheme = theme === 'dark';
 
-  const [vulnerabilities, setVulnerabilities] = useState<VulnerabilityRow[]>(
-    []
-  );
+  const [vulnerabilities, setVulnerabilities] = useState<VulnerabilityRow[]>([]);
   const [selectedVulnerability, setSelectedVulnerability] =
     useState<VulnerabilityRow | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -433,9 +467,13 @@ export default function VulnerabilitiesPage() {
   const codeContainerRef = useRef<HTMLDivElement>(null);
 
   // --- Data Fetching and Processing ---
+  // Filter vulnerabilities by severity if filter is set
+  const filteredVulnerabilities = severityFilter
+    ? vulnerabilities.filter(v => v.severity?.toLowerCase() === severityFilter)
+    : vulnerabilities;
 
   // Group vulnerabilities by file path
-  const vulnerabilitiesByFile = vulnerabilities.reduce((acc, vulnerability) => {
+  const vulnerabilitiesByFile = filteredVulnerabilities.reduce((acc, vulnerability) => {
     const filePath = vulnerability.file_path || '';
     if (!acc[filePath]) {
       acc[filePath] = [];
@@ -829,10 +867,10 @@ export default function VulnerabilitiesPage() {
   // --- Main Layout ---
   return (
     <div className="container mx-auto py-4">
+      {filterMenu}
       <div className="flex gap-4">
         {/* --- Left Column: Header + Sidebar --- */}
         <div className="w-1/4 flex-shrink-0">
-          {/* Header */}
           <div className="mb-4">
             <div className="flex items-center">
               <Button
@@ -856,7 +894,6 @@ export default function VulnerabilitiesPage() {
               </div>
             </div>
           </div>
-
           {/* Sidebar - File/Vulnerability List */}
           <div className="sticky top-4">
             <Card className="max-h-[calc(100vh-120px)] overflow-hidden">

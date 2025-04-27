@@ -1388,7 +1388,7 @@ Format your response as a single continuous text with clear sections. Keep it fa
     try {
         console.log(`[ScanSummary] Calling AI service with OAI model`);
         // Get the OpenAI service from our AI service
-        const openaiService = aiService.getService(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.GPT_4o);
+        const openaiService = aiService.getService(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.O4_MINI);
         // Call the AI model to generate the summary
         const completion = await openaiService.createCompletion(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.GPT_4o, {
             messages: [
