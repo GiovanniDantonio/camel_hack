@@ -1,6 +1,8 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import logging
 import os
+import json
+from flask_cors import CORS # Import CORS
 
 # Import necessary components from ai_tester and structs
 from structs import ScanReport, VulnerabilityTestResult # Assuming structs.py is in the same directory or accessible
@@ -10,6 +12,7 @@ from pydantic import ValidationError
 # --- Flask App Setup ---
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+CORS(app) # Enable CORS for all routes
 
 # Check for OpenAI API Key on startup
 if not API_KEY:
@@ -17,10 +20,11 @@ if not API_KEY:
     # In a real app, you might exit or prevent starting
     # For now, just log the error.
 
-# --- API Endpoint ---
+# --- API Endpoints ---
+
 @app.route('/test', methods=['POST'])
 def handle_test_request():
-    """Receives a scan report JSON and runs AI vulnerability tests."""
+    """Receives a scan report JSON and runs AI vulnerability tests synchronously."""
     if not API_KEY:
         return jsonify({"error": "Server configuration error: OpenAI API key not set."}), 500
 
@@ -49,10 +53,11 @@ def handle_test_request():
     try:
         logging.info(f"Received test request for scan_id: {scan_report.scan_metadata.scan_id}")
         # Call the core testing logic from ai_tester
-        results: List[VulnerabilityTestResult] = run_scan_tests(scan_report, query_limit)
+        results_generator = run_scan_tests(scan_report, query_limit)
+        results_list = list(results_generator) # Consume the generator
         
         # Convert results to JSON-serializable format
-        results_dict = [r.model_dump(mode='json') for r in results]
+        results_dict = [r.model_dump(mode='json') for r in results_list]
         
         logging.info(f"Finished tests for scan_id: {scan_report.scan_metadata.scan_id}")
         return jsonify({"results": results_dict}), 200
@@ -60,6 +65,49 @@ def handle_test_request():
     except Exception as e:
         logging.error(f"Error during run_scan_tests for scan_id {scan_report.scan_metadata.scan_id}: {e}", exc_info=True)
         return jsonify({"error": "An internal error occurred during vulnerability testing."}), 500
+
+@app.route('/test-stream', methods=['POST']) # Use POST to send report easily
+def handle_test_stream_request():
+    """Receives scan report JSON, runs tests, and streams results via SSE."""
+    if not API_KEY:
+        # SSE error handling is tricky, client just disconnects.
+        # Log error server-side.
+        logging.error("SSE Request Error: OpenAI API key not set.")
+        return Response("data: {\"error\": \"Server configuration error: OpenAI API key not set.\"}\n\n", mimetype='text/event-stream')
+
+    if not request.is_json:
+        logging.error("SSE Request Error: Payload not JSON")
+        return Response("data: {\"error\": \"Request must be JSON\"}\n\n", mimetype='text/event-stream')
+
+    data = request.get_json()
+    scan_report_data = data.get('scan_report')
+    query_limit = data.get('query_limit', 3)
+
+    if not scan_report_data:
+        logging.error("SSE Request Error: Missing scan_report")
+        return Response("data: {\"error\": \"Missing 'scan_report' in request body\"}\n\n", mimetype='text/event-stream')
+
+    try:
+        scan_report = ScanReport(**scan_report_data)
+    except Exception as e:
+        logging.error(f"SSE Request Error: Invalid scan_report format: {e}")
+        return Response(f"data: {json.dumps({'error': 'Invalid scan_report format', 'details': str(e)})}\n\n", mimetype='text/event-stream')
+
+    def generate_results():
+        try:
+            for result in run_scan_tests(scan_report, query_limit):
+                # Format for SSE: data: <json_string>\n\n
+                result_json = result.model_dump_json() # Use Pydantic's JSON dump
+                yield f"data: {result_json}\n\n"
+            # Signal end (optional)
+            yield f"event: end\ndata: {{}}\n\n"
+        except Exception as e:
+            logging.error(f"Error during streaming for scan_id {scan_report.scan_metadata.scan_id}: {e}", exc_info=True)
+            # Send an error event
+            error_data = json.dumps({"error": "An internal error occurred during streaming.", "details": str(e)})
+            yield f"event: error\ndata: {error_data}\n\n"
+            
+    return Response(generate_results(), mimetype='text/event-stream')
 
 # --- Run Server ---
 if __name__ == '__main__':

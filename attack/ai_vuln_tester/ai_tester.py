@@ -293,10 +293,8 @@ def test_vulnerability(vuln: VulnerabilityIndication, source_details: str, query
 
 # --- Main Test Runner Function ---
 
-def run_scan_tests(scan_report: ScanReport, query_limit: int) -> List[VulnerabilityTestResult]:
-    """Runs vulnerability tests based on a scan report object."""
-    test_results: List[VulnerabilityTestResult] = []
-
+def run_scan_tests(scan_report: ScanReport, query_limit: int):
+    """Runs vulnerability tests based on a scan report object, yielding results."""
     logging.info(f"Starting tests for {len(scan_report.vulnerabilities)} vulnerabilities from scan '{scan_report.scan_metadata.scan_id}'. Query limit per vuln: {query_limit}")
 
     for vuln in scan_report.vulnerabilities:
@@ -311,7 +309,7 @@ def run_scan_tests(scan_report: ScanReport, query_limit: int) -> List[Vulnerabil
                 error="Invalid target_url_base",
                 history=[]
             )
-            test_results.append(current_result)
+            yield current_result # Yield the result instead of appending
             continue
 
         try:
@@ -338,7 +336,7 @@ def run_scan_tests(scan_report: ScanReport, query_limit: int) -> List[Vulnerabil
                 history=[]
             )
 
-        test_results.append(current_result)
+        yield current_result # Yield the result instead of appending
 
         # Log result with color (won't show color in simple JSON response, but good for direct console)
         if current_result.success:
@@ -347,8 +345,6 @@ def run_scan_tests(scan_report: ScanReport, query_limit: int) -> List[Vulnerabil
             logging.info(f"Result for {vuln.id} ({vuln.potential_exploit_type}): Failure ({current_result.queries_used} queries)")
 
         print("-" * 30) # Separator
-
-    return test_results
 
 # --- Main Execution (for command-line use) ---
 
