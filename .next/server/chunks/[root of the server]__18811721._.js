@@ -1112,7 +1112,7 @@ async function runVulnerabilityAgent(projectId, branch, commit, path, vulnerabil
     if (!useVoting) {
         // We don't need to get a specific client anymore since our service handles that
         // Call the chosen model with the prompt
-        const completion = await callSingleModel(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.GPT_4o, prompt);
+        const completion = await callSingleModel(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.GEMINI_2_5, prompt);
         return parseVulnerabilityResponse(completion, path, projectId, prompt);
     }
     // Use voting with multiple models in parallel
