@@ -627,6 +627,9 @@ var OpenAIModel = /*#__PURE__*/ function(OpenAIModel) {
     OpenAIModel["GPT_4o_MINI"] = "gpt-4o-mini";
     OpenAIModel["O1"] = "o1";
     OpenAIModel["O3_MINI"] = "o3-mini";
+    OpenAIModel["O3"] = "o3";
+    OpenAIModel["GEMINI_2_5"] = "gemini-2.5-pro";
+    OpenAIModel["CLAUDE_3_7"] = "claude-3-7-sonnet";
     OpenAIModel["O4_MINI"] = "o4-mini";
     OpenAIModel["GPT_4_TURBO"] = "gpt-4-turbo";
     OpenAIModel["GPT_4_TURBO_128K"] = "gpt-4-turbo-128k";
@@ -1117,13 +1120,30 @@ async function runVulnerabilityAgent(projectId, branch, commit, path, vulnerabil
     // Use voting with multiple models in parallel
     console.log(`[VulnerabilityAgent] Using multi-model voting for ${path}`);
     // -------------------------------------------------------------
-    // Use 50 identical OpenAI o4-mini models for consensus voting
+    // Use OpenRouter with multiple model types
     // -------------------------------------------------------------
-    const modelConfigs = Array.from({
-        length: 50
-    }, ()=>({
-            model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.O4_MINI
-        }));
+    const modelConfigs = [
+        ...Array.from({
+            length: 30
+        }, ()=>({
+                model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.GEMINI_2_5
+            })),
+        ...Array.from({
+            length: 30
+        }, ()=>({
+                model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.O4_MINI
+            })),
+        ...Array.from({
+            length: 5
+        }, ()=>({
+                model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.O3
+            })),
+        ...Array.from({
+            length: 8
+        }, ()=>({
+                model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.CLAUDE_3_7
+            }))
+    ];
     // Helper to invoke models (used for full prompt and each chunk)
     async function invokeModels(p) {
         return Promise.all(modelConfigs.map((cfg)=>callModelWithErrorHandling(cfg.model, p)));
@@ -1454,12 +1474,13 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$octokit$2f$oct
     });
 }
 function calculateRiskScore(allVulnerabilities, filesScanned) {
-    // Assign weights to each severity (tweakable without touching algorithm below)
+    // Assign per-vulnerability weight with strong emphasis on critical issues
+    // Each critical adds 20 points; high 10; medium 5; low 2
     const severityWeights = {
-        critical: 50,
-        high: 30,
-        medium: 20,
-        low: 10
+        critical: 20,
+        high: 10,
+        medium: 5,
+        low: 2
     };
     if (!allVulnerabilities.length) return 0;
     // 1. Count vulnerabilities by severity
@@ -1472,36 +1493,11 @@ function calculateRiskScore(allVulnerabilities, filesScanned) {
     allVulnerabilities.forEach((v)=>{
         if (v.severity in severityCounts) severityCounts[v.severity]++;
     });
-    // 2. Weighted base score
-    let totalWeight = 0;
-    let weightedSum = 0;
-    Object.entries(severityCounts).forEach(([severity, count])=>{
-        const weight = severityWeights[severity] || 0;
-        weightedSum += count * weight;
-        totalWeight += count;
-    });
-    const baseScore = weightedSum / (totalWeight || 1);
-    // 3. Concentration – vulnerabilities packed in fewer files = higher risk
-    const filesWithVulns = new Set(allVulnerabilities.map((v)=>v.file_path || "unknown")).size;
-    const concentrationFactor = Math.min(1.0, Math.sqrt(totalWeight / (filesWithVulns || 1)));
-    // 4. Coverage – percentage of scanned files with vulnerabilities
-    const coverageFactor = filesWithVulns / (filesScanned || 1);
-    // 5. Pattern – repeated vuln types suggest systemic issues
-    const vulnTypeCount = {};
-    allVulnerabilities.forEach((v)=>{
-        const vulnType = v.title?.split(":")[0]?.trim() || "unknown";
-        vulnTypeCount[vulnType] = (vulnTypeCount[vulnType] || 0) + 1;
-    });
-    const repeatedTypes = Object.values(vulnTypeCount).filter((c)=>c > 1).length;
-    const patternFactor = repeatedTypes > 0 ? Math.min(1.3, 1 + repeatedTypes / 10) : 1.0;
-    // 6. Severe impact – nonlinear weight for critical+high
-    const severeCount = severityCounts.critical + severityCounts.high;
-    const severeFactor = severeCount > 0 ? Math.min(1.5, 1 + Math.log10(severeCount + 1) / 2) : 1.0;
-    // 7. Combine factors (weights sum to 1)
-    const compoundFactor = severeFactor * 0.5 + concentrationFactor * 0.2 + coverageFactor * 0.1 + patternFactor * 0.2;
-    // 8. Normalise to 0-100
-    const adjusted = baseScore * compoundFactor;
-    return Math.min(100, Math.ceil(adjusted * (1 + Math.log10(totalWeight + 1) / 2)));
+    // Compute weighted score simply proportional to vulnerability counts
+    const weightedSum = severityCounts.critical * severityWeights.critical + severityCounts.high * severityWeights.high + severityCounts.medium * severityWeights.medium + severityCounts.low * severityWeights.low;
+    // Cap at 100 to keep score in range
+    const riskScore = Math.min(100, weightedSum);
+    return riskScore;
 }
 async function runVulnerabilityScan(scanRequest) {
     const supabase = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2f$server$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["createClient"])();

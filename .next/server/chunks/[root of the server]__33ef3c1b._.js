@@ -339,6 +339,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$provider
 var AnthropicModel = /*#__PURE__*/ function(AnthropicModel) {
     AnthropicModel["CLAUDE_3_5_SONNET"] = "claude-3-5-sonnet-latest";
     AnthropicModel["CLAUDE_3_7_SONNET"] = "claude-3-7-sonnet-latest";
+    AnthropicModel["CLAUDE_3_5_HAIKU"] = "claude-3-5-haiku-latest";
+    AnthropicModel["CLAUDE_3_5_OPUS"] = "claude-3-5-opus-latest";
     return AnthropicModel;
 }({});
 class AnthropicService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$base$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["BaseAIService"] {
@@ -381,6 +383,11 @@ var OpenAIModel = /*#__PURE__*/ function(OpenAIModel) {
     OpenAIModel["GPT_4o_MINI"] = "gpt-4o-mini";
     OpenAIModel["O1"] = "o1";
     OpenAIModel["O3_MINI"] = "o3-mini";
+    OpenAIModel["O4_MINI"] = "o4-mini";
+    OpenAIModel["GPT_4_TURBO"] = "gpt-4-turbo";
+    OpenAIModel["GPT_4_TURBO_128K"] = "gpt-4-turbo-128k";
+    OpenAIModel["GPT_4_VISION"] = "gpt-4-vision-preview";
+    OpenAIModel["GPT_3_5_TURBO"] = "gpt-3.5-turbo";
     return OpenAIModel;
 }({});
 class OpenAIService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$base$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["BaseAIService"] {
@@ -467,11 +474,20 @@ const Models = {
     getProviderName: (model)=>{
         // Check which provider's enum contains this model
         for (const [providerName, enumObj] of Object.entries(Models)){
-            if (providerName !== 'getProviderName' && Object.values(enumObj).includes(model)) {
+            if (providerName !== 'getProviderName' && providerName !== 'getAllModels' && Object.values(enumObj).includes(model)) {
                 return providerName;
             }
         }
         return "Unknown";
+    },
+    // Return a flattened array of ALL model values across providers
+    getAllModels: ()=>{
+        return [
+            ...Object.values(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$providers$2f$openai$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["OpenAIModel"]),
+            ...Object.values(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$providers$2f$xai$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["XAIModel"]),
+            ...Object.values(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$providers$2f$groq$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["GroqModel"]),
+            ...Object.values(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$providers$2f$anthropic$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["AnthropicModel"])
+        ];
     }
 };
 }}),
