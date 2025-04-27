@@ -830,8 +830,7 @@ ${vulnerabilityList.length > 0 ? vulnerabilityList.map((vuln, index)=>`${index +
       - A code snippet of the vulnerable code
       - A recommended fix with code examples
 
-      Return your findings as JSON only. Note that your vulnerabilities' code snippets should not overlap with one another.
-`;
+IMPORTANT: respond _only_ with a valid JSON array of vulnerabilities. Do not include any explanatory text`;
 }
 /**
  * Parse the vulnerability response from any model and convert it to our database format
