@@ -448,7 +448,7 @@ export async function runVulnerabilityScan(
           scanRequest.commit,
           filePath,
           scanRequest.vulnerabilityList,
-          false,
+          true,
           scanRequest.customVulnerabilities || [],
         );
 

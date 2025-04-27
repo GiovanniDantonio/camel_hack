@@ -623,13 +623,10 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$provider
 ;
 ;
 var OpenAIModel = /*#__PURE__*/ function(OpenAIModel) {
-    OpenAIModel["O1"] = "o1";
-    OpenAIModel["O3_MINI"] = "o3-mini";
-    OpenAIModel["O3"] = "o3";
-    OpenAIModel["GEMINI_2_5"] = "gemini-2.5-pro";
-    OpenAIModel["CLAUDE_3_7"] = "claude-3-7-sonnet";
-    OpenAIModel["O4_MINI"] = "o4-mini";
-    OpenAIModel["GPT_4_TURBO"] = "gpt-4-turbo";
+    OpenAIModel["O3"] = "openai/o3";
+    OpenAIModel["GEMINI_2_5"] = "google/gemini-2.5-pro-exp-03-25";
+    OpenAIModel["CLAUDE_3_7"] = "anthropic/claude-3.7-sonnet:thinking";
+    OpenAIModel["O4_MINI"] = "openai/o4-mini-high";
     return OpenAIModel;
 }({});
 class OpenAIService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$base$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["BaseAIService"] {
@@ -643,7 +640,7 @@ class OpenAIService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$
         return model;
     }
     getDefaultModel() {
-        return "gemini-2.5-pro";
+        return "google/gemini-2.5-pro-exp-03-25";
     }
 }
 // Register the provider
@@ -1690,7 +1687,7 @@ async function runVulnerabilityScan(scanRequest) {
         const scanFile = async (filePath)=>{
             try {
                 console.log(`[VulnerabilityScan] Scanning file: ${filePath}`);
-                const vulnerabilities = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$services$2f$serverless$2f$scanner$2f$agents$2f$vulnerability$2d$agent$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["runVulnerabilityAgent"])(scanRequest.projectId, scanRequest.branch, scanRequest.commit, filePath, scanRequest.vulnerabilityList, false, scanRequest.customVulnerabilities || []);
+                const vulnerabilities = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$services$2f$serverless$2f$scanner$2f$agents$2f$vulnerability$2d$agent$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["runVulnerabilityAgent"])(scanRequest.projectId, scanRequest.branch, scanRequest.commit, filePath, scanRequest.vulnerabilityList, true, scanRequest.customVulnerabilities || []);
                 if (vulnerabilities.length > 0) {
                     console.log(`[VulnerabilityScan] Found ${vulnerabilities.length} vulnerabilities in ${filePath}`);
                     // Add scan_id to each vulnerability
