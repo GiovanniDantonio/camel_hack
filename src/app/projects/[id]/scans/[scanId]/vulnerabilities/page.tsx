@@ -8,7 +8,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator
+  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem
 } from '@/components/ui/dropdown-menu';
 import { Menu } from 'lucide-react';
 
@@ -403,7 +404,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
 
 export default function VulnerabilitiesPage() {
   // ...existing hooks
-  const [severityFilter, setSeverityFilter] = useState<string | null>(null);
+  const [severityFilters, setSeverityFilters] = useState<string[]>([]);
   // ...existing hooks
 
   // --- Hamburger menu filter UI ---
@@ -419,21 +420,22 @@ export default function VulnerabilitiesPage() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Filter by Severity</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setSeverityFilter(null)}>
+          <DropdownMenuItem onClick={() => setSeverityFilters([])}>
             All
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setSeverityFilter('critical')}>
-            Critical
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setSeverityFilter('high')}>
-            High
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setSeverityFilter('medium')}>
-            Medium
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setSeverityFilter('low')}>
-            Low
-          </DropdownMenuItem>
+          {['critical','high','medium','low'].map(level => (
+            <DropdownMenuCheckboxItem
+              key={level}
+              checked={severityFilters.includes(level)}
+              onCheckedChange={checked => {
+                setSeverityFilters(prev =>
+                  checked ? [...prev, level] : prev.filter(l => l !== level)
+                );
+              }}
+            >
+              {level.charAt(0).toUpperCase() + level.slice(1)}
+            </DropdownMenuCheckboxItem>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -468,9 +470,9 @@ export default function VulnerabilitiesPage() {
   const codeContainerRef = useRef<HTMLDivElement>(null);
 
   // --- Data Fetching and Processing ---
-  // Filter vulnerabilities by severity if filter is set
-  const filteredVulnerabilities = severityFilter
-    ? vulnerabilities.filter(v => v.severity?.toLowerCase() === severityFilter)
+  // Filter vulnerabilities by selected severities
+  const filteredVulnerabilities = severityFilters.length > 0
+    ? vulnerabilities.filter(v => severityFilters.includes(v.severity?.toLowerCase() || ''))
     : vulnerabilities;
 
   // Group vulnerabilities by file path

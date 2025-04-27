@@ -974,8 +974,13 @@ ${vulnerabilityList.length > 0 ? vulnerabilityList.map((vuln, index)=>`${index +
     let finalVulns = consensusVulns;
     if (finalVulns.length === 0 && vulnArray.length > 0) {
         const maxVotes = Math.max(...vulnArray.map((v)=>v.votes));
-        finalVulns = vulnArray.filter((v)=>v.votes === maxVotes);
-        console.warn(`[VulnerabilityAgent] No consensus above threshold; falling back to top-voted vulnerabilities (votes=${maxVotes}).`);
+        if (maxVotes >= 2) {
+            finalVulns = vulnArray.filter((v)=>v.votes === maxVotes);
+            console.warn(`[VulnerabilityAgent] No consensus above threshold; falling back to top-voted vulnerabilities (votes=${maxVotes}).`);
+        } else {
+            console.warn(`[VulnerabilityAgent] Top-voted vulnerabilities (votes=${maxVotes}) below minimum threshold (2); no vulnerabilities will be returned.`);
+            finalVulns = [];
+        }
     }
     // Convert back to Vulnerability[] format
     return finalVulns.map((vote)=>{
