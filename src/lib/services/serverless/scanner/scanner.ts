@@ -86,12 +86,13 @@ export function calculateRiskScore(
   allVulnerabilities: Array<{ severity: string; file_path: string | null; title?: string }>,
   filesScanned: number,
 ): number {
-  // Assign weights to each severity (tweakable without touching algorithm below)
+  // Assign per-vulnerability weight with strong emphasis on critical issues
+  // Each critical adds 20 points; high 10; medium 5; low 2
   const severityWeights: Record<string, number> = {
-    critical: 50,
-    high: 30,
-    medium: 20,
-    low: 10,
+    critical: 20,
+    high: 10,
+    medium: 5,
+    low: 2,
   };
 
   if (!allVulnerabilities.length) return 0;
@@ -107,55 +108,17 @@ export function calculateRiskScore(
     if (v.severity in severityCounts) severityCounts[v.severity]++;
   });
 
-  // 2. Weighted base score
-  let totalWeight = 0;
-  let weightedSum = 0;
-  Object.entries(severityCounts).forEach(([severity, count]) => {
-    const weight = severityWeights[severity] || 0;
-    weightedSum += count * weight;
-    totalWeight += count;
-  });
-  const baseScore = weightedSum / (totalWeight || 1);
+  // Compute weighted score simply proportional to vulnerability counts
+  const weightedSum =
+    severityCounts.critical * severityWeights.critical +
+    severityCounts.high * severityWeights.high +
+    severityCounts.medium * severityWeights.medium +
+    severityCounts.low * severityWeights.low;
 
-  // 3. Concentration – vulnerabilities packed in fewer files = higher risk
-  const filesWithVulns = new Set(
-    allVulnerabilities.map((v) => v.file_path || "unknown"),
-  ).size;
-  const concentrationFactor = Math.min(
-    1.0,
-    Math.sqrt(totalWeight / (filesWithVulns || 1)),
-  );
+  // Cap at 100 to keep score in range
+  const riskScore = Math.min(100, weightedSum);
 
-  // 4. Coverage – percentage of scanned files with vulnerabilities
-  const coverageFactor = filesWithVulns / (filesScanned || 1);
-
-  // 5. Pattern – repeated vuln types suggest systemic issues
-  const vulnTypeCount: Record<string, number> = {};
-  allVulnerabilities.forEach((v) => {
-    const vulnType = v.title?.split(":")[0]?.trim() || "unknown";
-    vulnTypeCount[vulnType] = (vulnTypeCount[vulnType] || 0) + 1;
-  });
-  const repeatedTypes = Object.values(vulnTypeCount).filter((c) => (c as number) > 1).length;
-  const patternFactor = repeatedTypes > 0
-    ? Math.min(1.3, 1 + repeatedTypes / 10)
-    : 1.0;
-
-  // 6. Severe impact – nonlinear weight for critical+high
-  const severeCount = severityCounts.critical + severityCounts.high;
-  const severeFactor = severeCount > 0
-    ? Math.min(1.5, 1 + Math.log10(severeCount + 1) / 2)
-    : 1.0;
-
-  // 7. Combine factors (weights sum to 1)
-  const compoundFactor =
-    severeFactor * 0.5 +
-    concentrationFactor * 0.2 +
-    coverageFactor * 0.1 +
-    patternFactor * 0.2;
-
-  // 8. Normalise to 0-100
-  const adjusted = baseScore * compoundFactor;
-  return Math.min(100, Math.ceil(adjusted * (1 + Math.log10(totalWeight + 1) / 2)));
+  return riskScore;
 }
 
 export async function runVulnerabilityScan(
