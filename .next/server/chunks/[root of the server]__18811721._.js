@@ -623,7 +623,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$provider
 ;
 ;
 var OpenAIModel = /*#__PURE__*/ function(OpenAIModel) {
-    OpenAIModel["O4_MINI"] = "openai/o4-mini-high";
+    OpenAIModel["O4_MINI"] = "o3-mini";
     return OpenAIModel;
 }({});
 class OpenAIService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$base$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["BaseAIService"] {
@@ -637,7 +637,7 @@ class OpenAIService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$
         return model;
     }
     getDefaultModel() {
-        return "openai/o4-mini-high";
+        return "o3-mini";
     }
 }
 // Register the provider

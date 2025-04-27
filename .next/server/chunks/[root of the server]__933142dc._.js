@@ -814,6 +814,15 @@ ${vulnerabilityList.length > 0 ? vulnerabilityList.map((vuln, index)=>`${index +
       15. Memory management issues (buffer overflows, memory leaks)
       16. Race conditions
       17. Hardcoded credentials or secrets`}${customVulnerabilitiesSection}
+      18. Insecure data storage
+      19. Business Logic flaws
+      20. Insecure APIs
+      21. Insecure data transmission
+      22. Insecure data encryption
+      23. Insecure data authentication
+      24. Insecure data authorization
+      25. Unauthenticated endpoints (CWE-306)
+
 
       File path: ${path}
 

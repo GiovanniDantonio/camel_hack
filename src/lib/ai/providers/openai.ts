@@ -2,7 +2,7 @@ import { BaseAIService } from "../base";
 import { ProviderRegistry } from "./registry";
 
 export enum OpenAIModel {
-  O4_MINI = "openai/o4-mini-high",
+  O4_MINI = "o3-mini",
 }
 
 export class OpenAIService extends BaseAIService<OpenAIModel> {
