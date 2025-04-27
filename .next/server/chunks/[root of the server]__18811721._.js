@@ -623,9 +623,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$provider
 ;
 ;
 var OpenAIModel = /*#__PURE__*/ function(OpenAIModel) {
-    OpenAIModel["O3"] = "openai/o3";
     OpenAIModel["GEMINI_2_5"] = "google/gemini-2.5-pro-exp-03-25";
-    OpenAIModel["CLAUDE_3_7"] = "anthropic/claude-3.7-sonnet:thinking";
     OpenAIModel["O4_MINI"] = "openai/o4-mini-high";
     return OpenAIModel;
 }({});
@@ -878,8 +876,19 @@ ${vulnerabilityList.length > 0 ? vulnerabilityList.map((vuln, index)=>`${index +
             const toolCall = completion.choices[0].message.tool_calls[0];
             parsedResponse = JSON.parse(toolCall.function.arguments);
         } else {
-            // Fall back to content parsing
-            parsedResponse = JSON.parse(responseContent.replace(/^```json\n?|```$/g, ""));
+            // Fall back: robust JSON extraction
+            const cleaned = responseContent.trim().replace(/^```json\s*/, '').replace(/```$/g, '');
+            try {
+                parsedResponse = JSON.parse(cleaned);
+            } catch (e) {
+                // Try extracting JSON block
+                const match = cleaned.match(/([\[\{][\s\S]*[\]\}])/);
+                if (match) {
+                    parsedResponse = JSON.parse(match[1]);
+                } else {
+                    throw new Error(`Unable to parse JSON from model response: ${e}`);
+                }
+            }
         }
         // Map the model's response to the database schema
         vulnerabilityResults = (parsedResponse.vulnerabilities || []).map((vuln)=>{
@@ -955,21 +964,19 @@ ${vulnerabilityList.length > 0 ? vulnerabilityList.map((vuln, index)=>`${index +
     });
     // Extract votes into array
     const vulnArray = Array.from(vulnerabilityVotes.values());
-    // Sort by number of votes (highest first)
-    vulnArray.sort((a, b)=>b.votes - a.votes);
-    const maxVotes = vulnArray.length ? vulnArray[0].votes : 0;
-    // Select vulnerabilities with the highest vote count (handle ties gracefully)
-    const topVoted = vulnArray.filter((v)=>v.votes === maxVotes);
+    const totalModels = allResults.length;
+    // Keep vulnerabilities with ≥50% consensus
+    const consensusVulns = vulnArray.filter((v)=>v.votes / totalModels >= 0.3).sort((a, b)=>b.votes - a.votes);
     console.log(`[VulnerabilityAgent] Voting results for ${path}:`);
     console.log(`- Total unique vulnerabilities found: ${vulnArray.length}`);
-    console.log(`- Top-voted vulnerabilities (votes = ${maxVotes}/${allResults.length}): ${topVoted.length}`);
-    // Convert back to Vulnerability[] format for database (return only top votes)
-    return topVoted.map((vote)=>{
+    console.log(`- Vulnerabilities with ≥50% consensus: ${consensusVulns.length}/${totalModels}`);
+    // Convert back to Vulnerability[] format
+    return consensusVulns.map((vote)=>{
         const vuln = vote.vulnerability;
-        const confPct = Math.round(vote.votes / allResults.length * 100);
+        const confPct = Math.round(vote.votes / totalModels * 100);
         return {
             title: vuln.title,
-            description: `${vuln.description}\n\n**Consensus:** ${vote.votes}/${allResults.length} agents (${confPct}%) agreed\nSources: ${vote.sources.join(', ')}`,
+            description: `${vuln.description}\n\n**Consensus:** ${vote.votes}/${totalModels} agents (${confPct}%) agreed\nSources: ${vote.sources.join(', ')}`,
             severity: vuln.severity,
             status: "open",
             location: path,
@@ -1127,16 +1134,6 @@ async function runVulnerabilityAgent(projectId, branch, commit, path, vulnerabil
             length: 30
         }, ()=>({
                 model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.O4_MINI
-            })),
-        ...Array.from({
-            length: 5
-        }, ()=>({
-                model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.O3
-            })),
-        ...Array.from({
-            length: 8
-        }, ()=>({
-                model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.CLAUDE_3_7
             }))
     ];
     // Helper to invoke models (used for full prompt and each chunk)
@@ -1387,7 +1384,7 @@ Format your response as a single continuous text with clear sections. Keep it fa
         // Get the OpenAI service from our AI service
         const openaiService = aiService.getService(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.O4_MINI);
         // Call the AI model to generate the summary
-        const completion = await openaiService.createCompletion(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.GPT_4o, {
+        const completion = await openaiService.createCompletion(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.O4_MINI, {
             messages: [
                 {
                     role: "user",
