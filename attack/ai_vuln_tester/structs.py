@@ -19,6 +19,8 @@ class VulnerabilityIndication(BaseModel):
     parameters: Optional[List[str]] = [] # Parameters involved
     potential_exploit_type: str # e.g., SQLi, XSS, RCE, IDOR
     target_url_base: str # Base URL of the running application to target
+    authentication_required: Optional[bool] = False
+    authentication_details: Optional[str] = None # e.g., "HTTP Basic: username:password", "Header: X-API-Key: <key>", "Cookie: sessionid=<value>"
 
 class ScanReport(BaseModel):
     scan_metadata: ScanMetadata

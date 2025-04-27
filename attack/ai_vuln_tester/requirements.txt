@@ -1,2 +1,4 @@
 openai
-pydantic 
+pydantic
+Flask
+Flask-Cors 

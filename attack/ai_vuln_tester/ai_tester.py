@@ -115,7 +115,7 @@ def run_command(command: str) -> Tuple[int, str, str]:
 
 # --- Core Logic ---
 
-def test_vulnerability(vuln: VulnerabilityIndication, query_limit: int) -> VulnerabilityTestResult:
+def test_vulnerability(vuln: VulnerabilityIndication, source_details: str, query_limit: int) -> VulnerabilityTestResult:
     """Attempts to test a single vulnerability using AI guidance."""
     logging.info(f"--- Testing Vulnerability: {vuln.id} ({vuln.potential_exploit_type} on {vuln.endpoint}) --- ")
     
@@ -128,9 +128,17 @@ def test_vulnerability(vuln: VulnerabilityIndication, query_limit: int) -> Vulne
 
     while query_count < query_limit:
         # 1. Generate Test Command
+        # Prepare authentication instruction for the prompt
+        auth_prompt_instruction = ""
+        if vuln.authentication_required and vuln.authentication_details:
+            auth_prompt_instruction = f"IMPORTANT: This request requires authentication. Use the following details: {vuln.authentication_details}. For curl with HTTP Basic Auth, use the '-u username:password' flag."
+        elif vuln.authentication_required:
+            auth_prompt_instruction = "IMPORTANT: This request requires authentication, but specific details were not provided in the report. Assume standard methods if possible."
+
         prompt_cmd = f"""
         Based on the following vulnerability details, generate a *single*, specific command-line command (e.g., using curl, wget) to test or exploit it.
         Focus on common and easily testable techniques for the indicated type.
+        {auth_prompt_instruction}
         Provide *only* the command, prefixed with 'Command:'.
 
         Vulnerability Details:
@@ -283,8 +291,67 @@ def test_vulnerability(vuln: VulnerabilityIndication, query_limit: int) -> Vulne
              history=history # Still include history if possible
         )
 
+# --- Main Test Runner Function ---
 
-# --- Main Execution ---
+def run_scan_tests(scan_report: ScanReport, query_limit: int):
+    """Runs vulnerability tests based on a scan report object, yielding results/status."""
+    # Yield initial status
+    yield {"type": "status", "message": f"Starting tests for scan {scan_report.scan_metadata.scan_id}..."}
+    logging.info(f"Starting tests for {len(scan_report.vulnerabilities)} vulnerabilities from scan '{scan_report.scan_metadata.scan_id}'. Query limit per vuln: {query_limit}")
+
+    for vuln_index, vuln in enumerate(scan_report.vulnerabilities):
+        # Yield status before starting this vulnerability test
+        yield {"type": "status", "message": f"[{vuln_index+1}/{len(scan_report.vulnerabilities)}] Starting test for {vuln.id} ({vuln.potential_exploit_type})..."}
+        current_result: Optional[VulnerabilityTestResult] = None
+        # Add safety check for target_url_base if needed
+        if not vuln.target_url_base or not vuln.target_url_base.startswith(('http://', 'https://')):
+            logging.warning(f"Skipping vulnerability {vuln.id} due to invalid or missing target_url_base: {vuln.target_url_base}")
+            current_result = VulnerabilityTestResult(
+                vuln_id=vuln.id,
+                success=False,
+                queries_used=0,
+                error="Invalid target_url_base",
+                history=[]
+            )
+            yield current_result # Yield the result instead of appending
+            continue
+
+        try:
+            # Pass source_details from the report metadata
+            current_result = test_vulnerability(vuln, scan_report.scan_metadata.source_details, query_limit)
+        except Exception as e:
+            logging.error(f"Exception during test_vulnerability for {vuln.id}: {e}", exc_info=True)
+            current_result = VulnerabilityTestResult(
+                vuln_id=vuln.id,
+                success=False,
+                queries_used=0,
+                error=f"Testing function failed: {e}",
+                history=[]
+            )
+
+        # Ensure we always have a result object of the correct type
+        if not isinstance(current_result, VulnerabilityTestResult):
+            logging.error(f"FATAL: test_vulnerability for {vuln.id} returned unexpected type: {type(current_result)}. Creating error result.")
+            current_result = VulnerabilityTestResult(
+                vuln_id=vuln.id,
+                success=False,
+                queries_used=0,
+                error=f"Internal error: Unexpected return type {type(current_result)}",
+                history=[]
+            )
+
+        yield current_result # Yield the result instead of appending
+
+        # Log result with color (won't show color in simple JSON response, but good for direct console)
+        if current_result.success:
+            logging.info(f"{COLOR_RED}Result for {vuln.id} ({vuln.potential_exploit_type}): SUCCESS ({current_result.queries_used} queries){COLOR_RESET}")
+        else:
+            logging.info(f"Result for {vuln.id} ({vuln.potential_exploit_type}): Failure ({current_result.queries_used} queries)")
+
+    # Yield final completion status
+    yield {"type": "status", "message": "All vulnerability tests completed."}
+
+# --- Main Execution (for command-line use) ---
 
 def main():
     parser = argparse.ArgumentParser(description="Test vulnerabilities from a scan report using AI guidance.")
@@ -313,56 +380,8 @@ def main():
          logging.error(f"An unexpected error occurred loading the report: {e}")
          return
 
-    test_results: List[VulnerabilityTestResult] = [] # Explicitly type the list
-
-    for vuln in scan_report.vulnerabilities:
-        current_result: Optional[VulnerabilityTestResult] = None # Initialize
-        # Add safety check for target_url_base if needed
-        if not vuln.target_url_base or not vuln.target_url_base.startswith(('http://', 'https://')):
-             logging.warning(f"Skipping vulnerability {vuln.id} due to invalid or missing target_url_base: {vuln.target_url_base}")
-             # Create a result object indicating the error
-             current_result = VulnerabilityTestResult(
-                 vuln_id=vuln.id,
-                 success=False,
-                 queries_used=0,
-                 error="Invalid target_url_base",
-                 history=[]
-             )
-             test_results.append(current_result)
-             continue
-
-        try:
-            current_result = test_vulnerability(vuln, args.limit)
-        except Exception as e:
-            logging.error(f"Exception during test_vulnerability for {vuln.id}: {e}", exc_info=True)
-            current_result = VulnerabilityTestResult(
-                vuln_id=vuln.id,
-                success=False,
-                queries_used=0, # Assuming error happened before queries
-                error=f"Testing function failed: {e}",
-                history=[]
-            )
-
-        # Ensure we always have a result object of the correct type
-        if not isinstance(current_result, VulnerabilityTestResult):
-            logging.error(f"FATAL: test_vulnerability for {vuln.id} returned unexpected type: {type(current_result)}. Creating error result.")
-            current_result = VulnerabilityTestResult(
-                vuln_id=vuln.id,
-                success=False,
-                queries_used=0,
-                error=f"Internal error: Unexpected return type {type(current_result)}",
-                history=[]
-            )
-
-        test_results.append(current_result)
-
-        # Log result with color
-        if current_result.success:
-            logging.info(f"{COLOR_RED}Result for {vuln.id} ({vuln.potential_exploit_type}): SUCCESS ({current_result.queries_used} queries){COLOR_RESET}")
-        else:
-            logging.info(f"Result for {vuln.id} ({vuln.potential_exploit_type}): Failure ({current_result.queries_used} queries)")
-
-        print("-" * 30) # Separator
+    # Run the tests using the refactored function
+    test_results = run_scan_tests(scan_report, args.limit)
 
     # Print Summary
     successful_tests = sum(1 for r in test_results if r.success)

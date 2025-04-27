@@ -20,3 +20,10 @@ V0:
         *VERIFY IT WORKED*
         Report to IDE if succeeded.
 
+
+
+
+Presentation:
+    Close things up
+    Keynote
+    Update URLs
