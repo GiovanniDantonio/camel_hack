@@ -13,7 +13,7 @@ import subprocess
 def kill_port_5000():
     try:
         # Find process using port 5000
-        result = subprocess.run(['lsof', '-i', ':5000'], capture_output=True, text=True)
+        result = subprocess.run(['lsof', '-i', ':5000'], capture_output=False, text=True)
         if result.stdout:
             # Get the PID from the output
             lines = result.stdout.strip().split('\n')
