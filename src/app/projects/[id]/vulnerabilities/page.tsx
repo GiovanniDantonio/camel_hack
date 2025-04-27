@@ -411,6 +411,13 @@ export default function VulnerabilitiesPage() {
     }
   };
 
+  // Extract consensus percentage from vulnerability description e.g "... (85%)"
+  const extractConsensusPercent = (desc: string | null) => {
+    if (!desc) return null;
+    const match = desc.match(/\((\d+)%\)/);
+    return match ? Number(match[1]) : null;
+  };
+
   // Navigate to vulnerability details
   const handleViewDetails = (vulnerability: VulnerabilityWithScans) => {
     setDetailsVulnerability(vulnerability);
@@ -613,13 +620,18 @@ export default function VulnerabilitiesPage() {
                     {getSeverityBadge(vulnerability.severity || '')}
                   </TableCell>
                   <TableCell className="font-medium">
-                    <div className="flex flex-col">
-                      <div>{vulnerability.title}</div>
-                      {vulnerability.verified_by_attack && (
-                        <div className="md:hidden mt-1">
-                          {getVerificationBadge(vulnerability.verified_by_attack, vulnerability.attack_verification_count)}
-                        </div>
-                      )}
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <span>{vulnerability.title}</span>
+                      {(() => {
+                        const pct = extractConsensusPercent(
+                          (vulnerability as any).description || null
+                        );
+                        return pct !== null ? (
+                          <Badge variant="outline" className="text-xs px-1 py-0.5 border-primary/40 text-primary/80">
+                            {pct}%
+                          </Badge>
+                        ) : null;
+                      })()}
                     </div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
@@ -655,6 +667,14 @@ export default function VulnerabilitiesPage() {
                     <div className="flex items-center">
                       <Calendar className="h-3 w-3 mr-1" />
                       {formatDate(vulnerability.created_at)}
+                      {(() => {
+                        const pct = extractConsensusPercent(
+                          (vulnerability as any).description || null
+                        );
+                        return pct !== null ? (
+                          <span className="ml-1">({pct}% consensus)</span>
+                        ) : null;
+                      })()}
                     </div>
                   </TableCell>
                   <TableCell>
