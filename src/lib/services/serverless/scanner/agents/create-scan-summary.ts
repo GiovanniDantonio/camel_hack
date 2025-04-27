@@ -142,7 +142,7 @@ Format your response as a single continuous text with clear sections. Keep it fa
     console.log(`[ScanSummary] Calling AI service with OAI model`);
 
     // Get the OpenAI service from our AI service
-    const openaiService = aiService.getService(Models.OpenAI.GPT_4o);
+    const openaiService = aiService.getService(Models.OpenAI.O4_MINI);
     
     // Call the AI model to generate the summary
     const completion = await openaiService.createCompletion(

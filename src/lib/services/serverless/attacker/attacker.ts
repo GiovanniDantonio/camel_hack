@@ -190,7 +190,7 @@ export async function analyzeVulnerabilityForAttack(
 ): Promise<SQLInjectionParams | null> {
   // Use the LLM to analyze the vulnerability and determine the appropriate attack parameters
   const aiService = AIService.getInstance();
-  const service = aiService.getService(Models.OpenAI.GPT_4o);
+  const service = aiService.getService(Models.OpenAI.O4_MINI);
   
   // Use JSON.stringify to dump the full vulnerability object into the prompt
   const vulnerabilityDetails = JSON.stringify(vulnerability, null, 2);

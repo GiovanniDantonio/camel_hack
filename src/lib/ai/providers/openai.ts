@@ -2,8 +2,6 @@ import { BaseAIService } from "../base";
 import { ProviderRegistry } from "./registry";
 
 export enum OpenAIModel {
-  GPT_4o = "gpt-4o",
-  GPT_4o_MINI = "gpt-4o-mini",
   O1 = "o1",
   O3_MINI = "o3-mini",
   O3 = "o3",
@@ -11,9 +9,6 @@ export enum OpenAIModel {
   CLAUDE_3_7 = "claude-3-7-sonnet",
   O4_MINI = "o4-mini",
   GPT_4_TURBO = "gpt-4-turbo",
-  GPT_4_TURBO_128K = "gpt-4-turbo-128k",
-  GPT_4_VISION = "gpt-4-vision-preview",
-  GPT_3_5_TURBO = "gpt-3.5-turbo",
 }
 
 export class OpenAIService extends BaseAIService<OpenAIModel> {
@@ -30,7 +25,7 @@ export class OpenAIService extends BaseAIService<OpenAIModel> {
   }
   
   protected getDefaultModel(): string {
-    return OpenAIModel.GPT_4o;
+    return OpenAIModel.GEMINI_2_5;
   }
 }
 

@@ -623,8 +623,6 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$provider
 ;
 ;
 var OpenAIModel = /*#__PURE__*/ function(OpenAIModel) {
-    OpenAIModel["GPT_4o"] = "gpt-4o";
-    OpenAIModel["GPT_4o_MINI"] = "gpt-4o-mini";
     OpenAIModel["O1"] = "o1";
     OpenAIModel["O3_MINI"] = "o3-mini";
     OpenAIModel["O3"] = "o3";
@@ -632,9 +630,6 @@ var OpenAIModel = /*#__PURE__*/ function(OpenAIModel) {
     OpenAIModel["CLAUDE_3_7"] = "claude-3-7-sonnet";
     OpenAIModel["O4_MINI"] = "o4-mini";
     OpenAIModel["GPT_4_TURBO"] = "gpt-4-turbo";
-    OpenAIModel["GPT_4_TURBO_128K"] = "gpt-4-turbo-128k";
-    OpenAIModel["GPT_4_VISION"] = "gpt-4-vision-preview";
-    OpenAIModel["GPT_3_5_TURBO"] = "gpt-3.5-turbo";
     return OpenAIModel;
 }({});
 class OpenAIService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$base$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["BaseAIService"] {
@@ -648,7 +643,7 @@ class OpenAIService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$
         return model;
     }
     getDefaultModel() {
-        return "gpt-4o";
+        return "gemini-2.5-pro";
     }
 }
 // Register the provider
@@ -1013,6 +1008,9 @@ ${vulnerabilityList.length > 0 ? vulnerabilityList.map((vuln, index)=>`${index +
  * Calls a single AI model to analyze vulnerabilities
  */ async function callSingleModel(model, prompt) {
     // Use our new AI service
+    if (!model) {
+        throw new Error("Attempted to call AI model with undefined model value");
+    }
     const aiService = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$index$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__$3c$locals$3e$__["AIService"].getInstance();
     const service = aiService.getService(model);
     // Call the model with the same parameters
@@ -1146,7 +1144,7 @@ async function runVulnerabilityAgent(projectId, branch, commit, path, vulnerabil
     ];
     // Helper to invoke models (used for full prompt and each chunk)
     async function invokeModels(p) {
-        return Promise.all(modelConfigs.map((cfg)=>callModelWithErrorHandling(cfg.model, p)));
+        return Promise.all(modelConfigs.filter((cfg)=>!!cfg.model).map((cfg)=>callModelWithErrorHandling(cfg.model, p)));
     }
     let modelResults = await invokeModels(prompt);
     // Detect context window errors (sentinel { __tooLarge: true })

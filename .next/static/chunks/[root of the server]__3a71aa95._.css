@@ -5463,12 +5463,6 @@
   }
 
   @media (width >= 48rem) {
-    .md\:hidden {
-      display: none;
-    }
-  }
-
-  @media (width >= 48rem) {
     .md\:table-cell {
       display: table-cell;
     }

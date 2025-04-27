@@ -1,0 +1,3 @@
+{
+  "/api/vulnerabilities/[id]/attacks/route": "app/api/vulnerabilities/[id]/attacks/route.js"
+}

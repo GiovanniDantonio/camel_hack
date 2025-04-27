@@ -552,7 +552,11 @@ export default function VulnerabilitiesPage() {
         setVulnerabilities(vulnData);
         // Persist vulnerabilities locally
         if (typeof window !== 'undefined') {
-          localStorage.setItem(storageKey, JSON.stringify(vulnData));
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(vulnData));
+          } catch (e) {
+            console.warn('Failed to persist vulnerabilities to localStorage:', e);
+          }
         }
 
         // Determine INITIAL selection using value read outside effect
