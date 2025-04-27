@@ -2,6 +2,7 @@ import os
 import json
 import subprocess
 import argparse
+from time import sleep
 from typing import List, Dict, Optional, Tuple
 from openai import OpenAI, BadRequestError
 from pydantic import ValidationError
@@ -18,10 +19,21 @@ if not API_KEY:
 client = OpenAI(api_key=API_KEY)
 AI_MODEL = "gpt-4o-mini" # Or your preferred model
 
+# ANSI Color Codes
+COLOR_RED = "\033[91m"
+COLOR_GREEN = "\033[92m"
+COLOR_YELLOW = "\033[93m"
+COLOR_BLUE = "\033[94m"
+COLOR_MAGENTA = "\033[95m"
+COLOR_CYAN = "\033[96m"
+COLOR_RESET = "\033[0m"
+
 # --- Helper Functions ---
 
 def call_openai(prompt: str, context_messages: List[Dict[str, str]] = []) -> Optional[str]:
     """Sends a prompt to the OpenAI API and returns the response content."""
+    print(f"{COLOR_CYAN}Sending prompt to OpenAI...{COLOR_RESET}")
+    sleep(1)
     messages = context_messages + [{"role": "user", "content": prompt}]
     try:
         response = client.chat.completions.create(
@@ -88,7 +100,7 @@ def run_command(command: str) -> Tuple[int, str, str]:
     """Runs a shell command and returns status code, stdout, and stderr."""
     logging.info(f"Executing command: {command}")
     try:
-        # Use shell=True cautiously, ensure commands from AI are somewhat trustworthy
+        # Use shell=True cautiou§y, ensure commands from AI are somewhat trustworthy
         # or add more sanitization. Splitting might be safer if possible.
         result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
         logging.debug(f"Command stdout:\n{result.stdout}")
@@ -237,15 +249,39 @@ def test_vulnerability(vuln: VulnerabilityIndication, query_limit: int) -> Vulne
 
     # If loop finishes without success
     logging.info(f"Vulnerability {vuln.id} test FAILED or inconclusive after {query_count} queries.")
-    return {
-        "vuln_id": vuln.id,
-        "success": False,
-        "final_command": last_command,
-        "final_stdout": last_response_stdout,
-        "final_stderr": last_response_stderr,
-        "queries_used": query_count,
-        "ai_assessment_reasoning": history[-1]["content"] if history and history[-1]["role"] == "assistant" else "N/A"
-    }
+
+    # Determine the last AI reasoning safely
+    last_reasoning = "N/A"
+    if history and history[-1].get("role") == "assistant":
+        last_reasoning = history[-1].get("content", "N/A")
+    elif history:
+        # If the last message wasn't from the assistant, maybe grab the last user prompt?
+        last_reasoning = f"Last message was user: {history[-1].get('content', 'N/A')[:100]}..."
+
+    try:
+        final_result = VulnerabilityTestResult(
+            vuln_id=vuln.id,
+            success=False,
+            final_command=last_command,
+            final_stdout=last_response_stdout,
+            final_stderr=last_response_stderr,
+            queries_used=query_count,
+            ai_assessment_reasoning=last_reasoning,
+            history=history
+        )
+        # DEBUG: Check type just before returning
+        logging.debug(f"DEBUG (inside test_vulnerability): Type before final return for {vuln.id}: {type(final_result)}")
+        return final_result
+    except Exception as e:
+        logging.error(f"Error creating final VulnerabilityTestResult for {vuln.id}: {e}", exc_info=True)
+        # Fallback return in case of error during result creation
+        return VulnerabilityTestResult(
+             vuln_id=vuln.id,
+             success=False,
+             queries_used=query_count,
+             error=f"Error creating final result object: {e}",
+             history=history # Still include history if possible
+        )
 
 
 # --- Main Execution ---
@@ -253,7 +289,7 @@ def test_vulnerability(vuln: VulnerabilityIndication, query_limit: int) -> Vulne
 def main():
     parser = argparse.ArgumentParser(description="Test vulnerabilities from a scan report using AI guidance.")
     parser.add_argument("report_file", help="Path to the JSON scan report file.")
-    parser.add_argument("-l", "--limit", type=int, default=5, help="Maximum number of AI queries per vulnerability.")
+    parser.add_argument("-l", "--limit", type=int, default=3, help="Maximum number of AI queries per vulnerability.")
     parser.add_argument("-o", "--output", help="Path to save the detailed test results (JSON).")
 
     args = parser.parse_args()
@@ -277,35 +313,71 @@ def main():
          logging.error(f"An unexpected error occurred loading the report: {e}")
          return
 
-    results = []
+    test_results: List[VulnerabilityTestResult] = [] # Explicitly type the list
+
     for vuln in scan_report.vulnerabilities:
+        current_result: Optional[VulnerabilityTestResult] = None # Initialize
         # Add safety check for target_url_base if needed
         if not vuln.target_url_base or not vuln.target_url_base.startswith(('http://', 'https://')):
              logging.warning(f"Skipping vulnerability {vuln.id} due to invalid or missing target_url_base: {vuln.target_url_base}")
-             results.append({
-                 "vuln_id": vuln.id,
-                 "success": False,
-                 "error": "Invalid target_url_base"
-             })
+             # Create a result object indicating the error
+             current_result = VulnerabilityTestResult(
+                 vuln_id=vuln.id,
+                 success=False,
+                 queries_used=0,
+                 error="Invalid target_url_base",
+                 history=[]
+             )
+             test_results.append(current_result)
              continue
 
-        result = test_vulnerability(vuln, args.limit)
-        results.append(result)
-        logging.info(f"Result for {vuln.id}: {'Success' if result['success'] else 'Failure'} ({result['queries_used']} queries)")
+        try:
+            current_result = test_vulnerability(vuln, args.limit)
+        except Exception as e:
+            logging.error(f"Exception during test_vulnerability for {vuln.id}: {e}", exc_info=True)
+            current_result = VulnerabilityTestResult(
+                vuln_id=vuln.id,
+                success=False,
+                queries_used=0, # Assuming error happened before queries
+                error=f"Testing function failed: {e}",
+                history=[]
+            )
+
+        # Ensure we always have a result object of the correct type
+        if not isinstance(current_result, VulnerabilityTestResult):
+            logging.error(f"FATAL: test_vulnerability for {vuln.id} returned unexpected type: {type(current_result)}. Creating error result.")
+            current_result = VulnerabilityTestResult(
+                vuln_id=vuln.id,
+                success=False,
+                queries_used=0,
+                error=f"Internal error: Unexpected return type {type(current_result)}",
+                history=[]
+            )
+
+        test_results.append(current_result)
+
+        # Log result with color
+        if current_result.success:
+            logging.info(f"{COLOR_RED}Result for {vuln.id} ({vuln.potential_exploit_type}): SUCCESS ({current_result.queries_used} queries){COLOR_RESET}")
+        else:
+            logging.info(f"Result for {vuln.id} ({vuln.potential_exploit_type}): Failure ({current_result.queries_used} queries)")
+
         print("-" * 30) # Separator
 
     # Print Summary
-    successful_tests = sum(1 for r in results if r.get('success'))
+    successful_tests = sum(1 for r in test_results if r.success)
     print("\n--- Test Summary ---")
-    print(f"Total Vulnerabilities Processed: {len(results)}")
+    print(f"Total Vulnerabilities Processed: {len(test_results)}")
     print(f"Successful Tests: {successful_tests}")
-    print(f"Failed/Inconclusive Tests: {len(results) - successful_tests}")
+    print(f"Failed/Inconclusive Tests: {len(test_results) - successful_tests}")
 
     # Save detailed results if output file specified
     if args.output:
         try:
+            # Convert Pydantic models to dictionaries for JSON serialization
+            results_dict = [r.model_dump(mode='json') for r in test_results]
             with open(args.output, 'w') as f:
-                json.dump(results, f, indent=2)
+                json.dump(results_dict, f, indent=2)
             logging.info(f"Detailed test results saved to {args.output}")
         except Exception as e:
             logging.error(f"Failed to save results to {args.output}: {e}")
