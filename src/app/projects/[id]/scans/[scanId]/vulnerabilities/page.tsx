@@ -405,6 +405,16 @@ export default function VulnerabilitiesPage() {
   const [severityFilter, setSeverityFilter] = useState<string | null>(null);
   // ...existing hooks
 
+  // Utility to extract the repo name from a GitHub URL
+  function getRepoNameFromUrl(url: string | null): string {
+    if (!url) return '';
+    // Remove trailing .git and extract owner/repo
+    const cleaned = url.replace(/\.git$/, '');
+    const parts = cleaned.split('/');
+    if (parts.length < 2) return '';
+    return parts.slice(-2).join('/');
+  }
+
   // --- Hamburger menu filter UI ---
   const filterMenu = (
     <div className="flex items-center justify-between mb-4">
@@ -1093,6 +1103,36 @@ export default function VulnerabilitiesPage() {
                       />
                     </div>
                   )}
+
+                  {/* Fix Issue Button */}
+                  <div className="pb-4">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        // Prepare query params for VSCode Lite
+                        const repo = repoUrl ? getRepoNameFromUrl(repoUrl) : '';
+                        const file = selectedVulnerability.file_path || '';
+                        const line = selectedVulnerability.line_start || 1;
+                        // Pass the issue context as a JSON string (encodeURIComponent)
+                        const issue = encodeURIComponent(JSON.stringify({
+                          title: selectedVulnerability.title,
+                          description: selectedVulnerability.description,
+                          remediation: selectedVulnerability.remediation,
+                          severity: selectedVulnerability.severity,
+                          file_path: selectedVulnerability.file_path,
+                          line_start: selectedVulnerability.line_start,
+                          line_end: selectedVulnerability.line_end,
+                          id: selectedVulnerability.id,
+                        }));
+                        // Open VSCode Lite with all context
+                        window.open(`/vscode-lite?repo=${encodeURIComponent(repo)}&file=${encodeURIComponent(file)}&line=${line}&issue=${issue}`, '_blank');
+                      }}
+                    >
+                      Fix Issue
+                    </Button>
+                  </div>
 
                   {/* Recommendation */}
                   <RecommendationCard vulnerability={selectedVulnerability} />

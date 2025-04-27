@@ -22,6 +22,25 @@ const RIGHTSIDEBAR_MAX_WIDTH = 480;
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
+// --- Types for deep link ---
+type DeepLinkIssue = {
+  title?: string;
+  description?: string;
+  remediation?: string;
+  severity?: string;
+  file_path?: string;
+  line_start?: number;
+  line_end?: number;
+  id?: string;
+};
+
+type DeepLinkState = {
+  repo: string;
+  file: string;
+  line: number | undefined;
+  issue: DeepLinkIssue | undefined;
+};
+
 export default function VSCodeLitePage() {
   // Sidebar and right sidebar state
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -62,6 +81,11 @@ export default function VSCodeLitePage() {
 
   // --- Collapsed state for GitHub folders ---
   const [collapsedGithubDirs, setCollapsedGithubDirs] = useState<Set<string>>(new Set());
+
+  // --- Deep link state ---
+  const [deepLink, setDeepLink] = useState<DeepLinkState>({ repo: '', file: '', line: undefined, issue: undefined });
+  // Track if we've auto-loaded from deep link
+  const [autoLoaded, setAutoLoaded] = useState(false);
 
   function toggleDirCollapse(path: string) {
     setCollapsedDirs(prev => {
@@ -235,6 +259,74 @@ export default function VSCodeLitePage() {
     });
   }
 
+  // --- Utility: Expand directories to reveal a file path in the GitHub tree ---
+  function expandGithubDirsToFile(filePath: string) {
+    const parts = filePath.split('/');
+    let currPath = '';
+    const newSet = new Set(collapsedGithubDirs);
+    for (let i = 0; i < parts.length - 1; ++i) {
+      currPath = currPath ? currPath + '/' + parts[i] : parts[i];
+      newSet.delete(currPath); // ensure expanded
+    }
+    setCollapsedGithubDirs(newSet);
+  }
+
+  // --- Highlight line in Monaco Editor (robust) ---
+  const editorRef = useRef<any>(null);
+  function handleEditorMount(editor: any) {
+    editorRef.current = editor;
+    // Highlight line if deepLink.line is present
+    if (deepLink.line) {
+      editor.revealLineInCenter(deepLink.line);
+      editor.setPosition({ lineNumber: deepLink.line, column: 1 });
+      editor.focus();
+      editor.deltaDecorations([], [{
+        range: new window.monaco.Range(deepLink.line, 1, deepLink.line, 1),
+        options: {
+          isWholeLine: true,
+          className: 'ai-vuln-highlight',
+          linesDecorationsClassName: 'ai-vuln-gutter',
+        },
+      }]);
+    }
+  }
+
+  // --- Effect: On deep link or repo/file change, auto-select and expand ---
+  useEffect(() => {
+    if (!deepLink.repo) return;
+    if (!repo) setRepo(deepLink.repo);
+    // Wait for repo and githubFiles to be loaded
+    if (repo === deepLink.repo && githubFiles.length && !autoLoaded) {
+      if (deepLink.file) {
+        setCurrentFile(deepLink.file);
+        expandGithubDirsToFile(deepLink.file);
+        // Fetch file content if not already loaded
+        fetch(`/api/github/file?repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(deepLink.file)}`)
+          .then(res => res.json())
+          .then(data => {
+            const content = data.content ? atob(data.content.replace(/\n/g, '')) : '';
+            setEditorValue(content);
+            setTimeout(() => {
+              if (editorRef.current && deepLink.line) {
+                editorRef.current.revealLineInCenter(deepLink.line);
+                editorRef.current.setPosition({ lineNumber: deepLink.line, column: 1 });
+                editorRef.current.focus();
+                editorRef.current.deltaDecorations([], [{
+                  range: new window.monaco.Range(deepLink.line, 1, deepLink.line, 1),
+                  options: {
+                    isWholeLine: true,
+                    className: 'ai-vuln-highlight',
+                    linesDecorationsClassName: 'ai-vuln-gutter',
+                  },
+                }]);
+              }
+            }, 600);
+          });
+      }
+      setAutoLoaded(true);
+    }
+  }, [deepLink, repo, githubFiles, autoLoaded]);
+
   // Toolbar actions (minimal, for demo)
   function handleToolbarAction(action: string) {
     alert(`Action: ${action} (demo only)`);
@@ -300,6 +392,109 @@ export default function VSCodeLitePage() {
       document.body.style = '';
     };
   }, []);
+
+  // Parse query params for deep linking
+  function parseQuery(): DeepLinkState {
+    if (typeof window === 'undefined') return { repo: '', file: '', line: undefined, issue: undefined };
+    const params = new URLSearchParams(window.location.search);
+    let issue: DeepLinkIssue | undefined = undefined;
+    try {
+      const raw = params.get('issue');
+      issue = raw ? JSON.parse(decodeURIComponent(raw)) : undefined;
+    } catch (e) {
+      issue = undefined;
+    }
+    return {
+      repo: params.get('repo') || '',
+      file: params.get('file') || '',
+      line: params.get('line') ? Number(params.get('line')) : undefined,
+      issue,
+    };
+  }
+
+  // On mount, parse query params
+  useEffect(() => {
+    setDeepLink(parseQuery());
+  }, []);
+
+  // When repo, file, line, or issue changes, auto-select them
+  useEffect(() => {
+    if (!deepLink.repo) return;
+    if (!repo) setRepo(deepLink.repo);
+    // Wait for repo and githubFiles to be loaded
+    if (repo === deepLink.repo && githubFiles.length && !autoLoaded) {
+      if (deepLink.file) {
+        setCurrentFile(deepLink.file);
+        // Fetch file content if not already loaded
+        fetch(`/api/github/file?repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(deepLink.file)}`)
+          .then(res => res.json())
+          .then(data => {
+            const content = data.content ? atob(data.content.replace(/\n/g, '')) : '';
+            setEditorValue(content);
+            // Optionally, scroll/highlight line in editor
+            setTimeout(() => {
+              if (deepLink.line && window.monaco) {
+                const editor = window.monaco && window.monaco.editor && window.monaco.editor.getEditors && window.monaco.editor.getEditors()[0];
+                if (editor) {
+                  editor.revealLineInCenter(deepLink.line);
+                  editor.setPosition({ lineNumber: deepLink.line, column: 1 });
+                  editor.focus();
+                }
+              }
+            }, 500);
+          });
+      }
+      setAutoLoaded(true);
+    }
+  }, [deepLink, repo, githubFiles, autoLoaded]);
+
+  // --- Ensure repo is set from deep link on mount and when githubRepos change ---
+  useEffect(() => {
+    if (deepLink.repo && githubRepos.length) {
+      // Try to find a matching repo in the fetched list
+      const found = githubRepos.find(r => {
+        // Support both string and object repo formats
+        if (typeof r === 'string') return r === deepLink.repo;
+        if (r.full_name) return r.full_name === deepLink.repo;
+        if (r.name && r.owner) return `${r.owner.login}/${r.name}` === deepLink.repo;
+        return false;
+      });
+      if (found) setRepo(deepLink.repo);
+    }
+  }, [deepLink.repo, githubRepos]);
+
+  // Pass issue to AI Agent panel
+  useEffect(() => {
+    if (deepLink.issue) {
+      setRightSidebarCollapsed(false);
+      // Render issue in AI agent panel
+      const agentPanel = document.getElementById('ai-agent-panel');
+      if (agentPanel) {
+        agentPanel.innerHTML = '';
+        const div = document.createElement('div');
+        div.style.padding = '1em';
+        div.innerHTML = `
+          <div style='font-weight:bold;font-size:1.1em;margin-bottom:0.5em;color:#c00;'>${deepLink.issue.title}</div>
+          <div style='margin-bottom:0.5em;'><b>Severity:</b> ${deepLink.issue.severity || 'N/A'}</div>
+          <div style='margin-bottom:0.5em;'><b>File:</b> <code>${deepLink.issue.file_path || ''}</code> <b>Line:</b> ${deepLink.issue.line_start || ''}</div>
+          <div style='margin-bottom:0.5em;'><b>Description:</b> <br>${deepLink.issue.description || ''}</div>
+          ${deepLink.issue.remediation ? `<div style='margin-bottom:0.5em;'><b>Recommended Fix:</b><br><pre style='background:#222;color:#fff;padding:0.5em;border-radius:4px;'>${deepLink.issue.remediation}</pre></div>` : ''}
+          <button id='ai-fix-btn' style='background:#c00;color:#fff;padding:0.5em 1em;border:none;border-radius:4px;cursor:pointer;font-weight:bold;'>Auto-Fix with AI</button>
+        `;
+        agentPanel.appendChild(div);
+        // Add click handler for AI fix
+        setTimeout(() => {
+          const btn = document.getElementById('ai-fix-btn');
+          if (btn) {
+            btn.onclick = () => {
+              alert('AI code fix coming soon!');
+              // Here you would trigger the AI agent logic to propose and apply a fix
+            };
+          }
+        }, 100);
+      }
+    }
+  }, [deepLink.issue]);
 
   // Sidebar views logic
   function renderSidebarView() {
@@ -465,6 +660,7 @@ export default function VSCodeLitePage() {
               theme="vs-dark"
               onChange={v => setEditorValue(v || '')}
               options={{ minimap: { enabled: false } }}
+              onMount={handleEditorMount}
             />
           </div>
           {/* Only show Terminal if not collapsed */}
