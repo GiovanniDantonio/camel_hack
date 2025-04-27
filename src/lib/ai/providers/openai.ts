@@ -2,9 +2,7 @@ import { BaseAIService } from "../base";
 import { ProviderRegistry } from "./registry";
 
 export enum OpenAIModel {
-  O3 = "openai/o3",
   GEMINI_2_5 = "google/gemini-2.5-pro-exp-03-25",
-  CLAUDE_3_7 = "anthropic/claude-3.7-sonnet:thinking",
   O4_MINI = "openai/o4-mini-high",
 }
 

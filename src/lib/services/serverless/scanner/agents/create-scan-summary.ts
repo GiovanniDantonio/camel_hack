@@ -146,7 +146,7 @@ Format your response as a single continuous text with clear sections. Keep it fa
     
     // Call the AI model to generate the summary
     const completion = await openaiService.createCompletion(
-      Models.OpenAI.GPT_4o,
+      Models.OpenAI.O4_MINI,
       {
         messages: [{ role: "user", content: prompt }],
         temperature: 0.3,
