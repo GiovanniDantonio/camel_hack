@@ -637,7 +637,7 @@ class OpenAIService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$
         return model;
     }
     getDefaultModel() {
-        return OpenAIModel.O4_MINI;
+        return "openai/o4-mini-high";
     }
 }
 // Register the provider
@@ -970,8 +970,15 @@ ${vulnerabilityList.length > 0 ? vulnerabilityList.map((vuln, index)=>`${index +
     console.log(`[VulnerabilityAgent] Voting results for ${path}:`);
     console.log(`- Total unique vulnerabilities found: ${vulnArray.length}`);
     console.log(`- Vulnerabilities with ≥5% consensus: ${consensusVulns.length}/${totalModels}`);
+    // Determine which set to return: prefer consensus, else highest votes
+    let finalVulns = consensusVulns;
+    if (finalVulns.length === 0 && vulnArray.length > 0) {
+        const maxVotes = Math.max(...vulnArray.map((v)=>v.votes));
+        finalVulns = vulnArray.filter((v)=>v.votes === maxVotes);
+        console.warn(`[VulnerabilityAgent] No consensus above threshold; falling back to top-voted vulnerabilities (votes=${maxVotes}).`);
+    }
     // Convert back to Vulnerability[] format
-    return consensusVulns.map((vote)=>{
+    return finalVulns.map((vote)=>{
         const vuln = vote.vulnerability;
         const confPct = Math.round(vote.votes / totalModels * 100);
         return {
