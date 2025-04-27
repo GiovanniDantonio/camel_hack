@@ -1,11 +1,11 @@
 const CHUNK_PUBLIC_PATH = "server/app/api/projects/[id]/scans/[scanId]/vulnerabilities/route.js";
 const runtime = require("../../../../../../../chunks/[turbopack]_runtime.js");
-runtime.loadChunk("server/chunks/node_modules_a01f7dd6._.js");
-runtime.loadChunk("server/chunks/node_modules_next_5e373d24._.js");
+runtime.loadChunk("server/chunks/node_modules_7c809d28._.js");
+runtime.loadChunk("server/chunks/node_modules_next_cccddc3a._.js");
 runtime.loadChunk("server/chunks/node_modules_tr46_816df9d9._.js");
-runtime.loadChunk("server/chunks/node_modules_@supabase_auth-js_dist_module_6b08851c._.js");
-runtime.loadChunk("server/chunks/node_modules_689d42c5._.js");
-runtime.loadChunk("server/chunks/[root of the server]__6966f24e._.js");
+runtime.loadChunk("server/chunks/node_modules_@supabase_auth-js_dist_module_fbd19a5c._.js");
+runtime.loadChunk("server/chunks/node_modules_f7d0c77b._.js");
+runtime.loadChunk("server/chunks/[root-of-the-server]__280b74ed._.js");
 runtime.getOrInstantiateRuntimeModule("[project]/.next-internal/server/app/api/projects/[id]/scans/[scanId]/vulnerabilities/route/actions.js [app-rsc] (server actions loader, ecmascript)", CHUNK_PUBLIC_PATH);
 runtime.getOrInstantiateRuntimeModule("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/src/app/api/projects/[id]/scans/[scanId]/vulnerabilities/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)", CHUNK_PUBLIC_PATH);
 module.exports = runtime.getOrInstantiateRuntimeModule("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/src/app/api/projects/[id]/scans/[scanId]/vulnerabilities/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)", CHUNK_PUBLIC_PATH).exports;

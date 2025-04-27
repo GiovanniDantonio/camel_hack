@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VSCode Lite</title>
+  <link href="https://cdn.jsdelivr.net/npm/@vscode/codicons/dist/codicon.css" rel="stylesheet" />
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', 'Liberation Sans', Arial, sans-serif;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+    #toolbar {
+      background: #23272e;
+      color: #cccccc;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      border-bottom: 1px solid #222;
+      box-shadow: 0 1px 0 #0003;
+    }
+    #toolbar button {
+      background: none;
+      border: none;
+      color: #cccccc;
+      padding: 6px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    #toolbar button:hover {
+      background: #2a2d33;
+    }
+    #toolbar #active-filename {
+      margin-left: 24px;
+      font-weight: 500;
+      color: #d7ba7d;
+    }
+    #activitybar {
+      width: 48px;
+      min-width: 48px;
+      max-width: 48px;
+      height: 100%;
+      background: #21252b;
+      color: #cccccc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-right: 1px solid #222;
+      padding-top: 8px;
+      z-index: 2;
+    }
+    #activitybar .codicon {
+      font-size: 24px;
+      margin: 12px 0;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.2s, background 0.2s;
+      padding: 8px;
+      border-radius: 6px;
+    }
+    #activitybar .codicon.active, #activitybar .codicon:hover {
+      background: #31313a;
+      opacity: 1;
+      color: #3794ff;
+    }
+    #tabbar {
+      height: 36px;
+      background: #23272e;
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+      overflow-x: auto;
+      white-space: nowrap;
+      z-index: 1;
+    }
+    #tabbar .tab {
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      height: 100%;
+      font-size: 14px;
+      color: #cccccc;
+      cursor: pointer;
+      position: relative;
+      border-bottom: 2px solid transparent;
+      transition: background 0.2s, border-bottom 0.2s;
+    }
+    #tabbar .tab.active {
+      background: #23272e;
+      color: #fff;
+      border-bottom: 2px solid #3794ff;
+    }
+    #tabbar .tab .codicon-close {
+      margin-left: 8px;
+      font-size: 16px;
+      opacity: 0.7;
+      cursor: pointer;
+    }
+    #statusbar {
+      height: 24px;
+      background: #007acc;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      padding: 0 16px;
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 100;
+    }
+    #statusbar span {
+      margin-right: 24px;
+    }
+    body {
+      padding-bottom: 24px;
+    }
+    #layout {
+      display: flex;
+      height: calc(100vh - 36px - 36px - 24px - 200px);
+      width: 100vw;
+      position: relative;
+    }
+    #sidebar {
+      width: 250px;
+      min-width: 200px;
+      max-width: 350px;
+      background: #23272e;
+      color: #d4d4d4;
+      padding: 0;
+      box-sizing: border-box;
+      border-right: 1px solid #222;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+      z-index: 1;
+      transition: width 0.2s, min-width 0.2s, max-width 0.2s;
+    }
+    #sidebar.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      max-width: 0 !important;
+      overflow: hidden;
+      border-right: none;
+      padding: 0;
+    }
+    #sidebar-toggle {
+      position: absolute;
+      top: 12px;
+      right: -16px;
+      width: 24px;
+      height: 24px;
+      background: #23272e;
+      color: #cccccc;
+      border: 1px solid #222;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 2px 8px #0003;
+      transition: background 0.2s;
+    }
+    #sidebar-toggle:hover {
+      background: #31313a;
+    }
+    #sidebar-header {
+      padding: 16px 16px 8px 16px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #cccccc;
+      border-bottom: 1px solid #222;
+      background: #23272e;
+      z-index: 2;
+    }
+    #sidebar-content {
+      flex: 1;
+      padding: 0;
+      overflow-y: auto;
+      background: #23272e;
+      z-index: 1;
+      height: 100%;
+    }
+    .sidebar-view {
+      display: none;
+      height: 100%;
+    }
+    .sidebar-view.active {
+      display: block;
+      height: 100%;
+    }
+    #folder-tree {
+      padding: 8px 0 8px 0;
+      background: #23272e;
+    }
+    #container {
+      flex-grow: 1;
+      min-width: 0;
+      min-height: 0;
+      height: 100%;
+      background: #1e1e1e;
+    }
+    #terminal-panel {
+      width: 100vw;
+      background: #1e1e1e;
+      border-top: 1px solid #222;
+      position: relative;
+      transition: height 0.2s;
+    }
+    #terminal-panel.collapsed {
+      height: 28px !important;
+      min-height: 0 !important;
+      max-height: 28px !important;
+      overflow: hidden;
+    }
+    #terminal-tabs {
+      display: flex;
+      align-items: center;
+      background: #23272e;
+      border-bottom: 1px solid #222;
+      height: 28px;
+      padding-left: 8px;
+    }
+    #terminal-tabs .term-tab {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      height: 100%;
+      color: #cccccc;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-bottom: 2px solid transparent;
+      margin-right: 2px;
+      transition: background 0.2s, border-bottom 0.2s;
+    }
+    #terminal-tabs .term-tab.active {
+      color: #fff;
+      border-bottom: 2px solid #3794ff;
+      background: #23272e;
+    }
+    #terminal-tabs .codicon-close {
+      margin-left: 6px;
+      font-size: 14px;
+      opacity: 0.7;
+      cursor: pointer;
+    }
+    #terminal-tabs .codicon-add {
+      margin-left: 8px;
+      font-size: 16px;
+      opacity: 0.7;
+      cursor: pointer;
+    }
+    #terminal-container {
+      width: 100%;
+      height: 172px;
+      background: #1e1e1e;
+      position: relative;
+    }
+    #rightbar {
+      width: 48px;
+      min-width: 48px;
+      max-width: 48px;
+      height: 100%;
+      background: #21252b;
+      color: #cccccc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-left: 1px solid #222;
+      padding-top: 8px;
+      z-index: 2;
+      position: relative;
+    }
+    #rightsidebar {
+      width: 300px;
+      min-width: 200px;
+      max-width: 350px;
+      background: #23272e;
+      color: #d4d4d4;
+      padding: 0;
+      box-sizing: border-box;
+      border-left: 1px solid #222;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+      z-index: 1;
+      transition: width 0.2s, min-width 0.2s, max-width 0.2s;
+    }
+    #rightsidebar.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      max-width: 0 !important;
+      overflow: hidden;
+      border-left: none;
+      padding: 0;
+    }
+    #rightsidebar-toggle {
+      position: absolute;
+      top: 12px;
+      left: -16px;
+      width: 24px;
+      height: 24px;
+      background: #23272e;
+      color: #cccccc;
+      border: 1px solid #222;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 2px 8px #0003;
+      transition: background 0.2s;
+    }
+    #rightsidebar-toggle:hover {
+      background: #31313a;
+    }
+    #ai-agent-view {
+      flex: 1;
+      padding: 16px;
+      background: #23272e;
+      color: #fff;
+      overflow-y: auto;
+    }
+    #ai-agent-header {
+      padding: 16px 16px 8px 16px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #cccccc;
+      border-bottom: 1px solid #222;
+      background: #23272e;
+      z-index: 2;
+    }
+    #ai-agent-content {
+      flex: 1;
+      padding: 0;
+      overflow-y: auto;
+      background: #23272e;
+      z-index: 1;
+      height: 100%;
+    }
+    #rightbar .codicon {
+      font-size: 24px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      border-radius: 5px;
+      padding: 4px;
+      transition: background 0.15s;
+    }
+    #rightbar .codicon.active, #rightbar .codicon:hover {
+      background: #23272e;
+      color: #fff;
+    }
+    #bottom-panel-toggle {
+      position: absolute;
+      top: -32px;
+      right: 12px;
+      background: #23272e;
+      color: #cccccc;
+      border: 1px solid #222;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 2px 8px #0003;
+      transition: background 0.2s;
+    }
+    #bottom-panel-toggle:hover {
+      background: #31313a;
+    }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <button id="new-file-btn">New File</button>
+    <button id="save-file-btn">Save File</button>
+    <button id="rename-file-btn">Rename File</button>
+    <button id="delete-file-btn">Delete File</button>
+    <span id="active-filename"></span>
+  </div>
+  <div id="tabbar"></div>
+  <div id="layout">
+    <div id="activitybar">
+      <span class="codicon codicon-files active" title="Explorer" data-view="explorer"></span>
+      <span class="codicon codicon-search" title="Search" data-view="search"></span>
+      <span class="codicon codicon-source-control" title="Source Control" data-view="scm"></span>
+      <span class="codicon codicon-run-all" title="Run & Debug" data-view="run"></span>
+      <span class="codicon codicon-extensions" title="Extensions" data-view="extensions"></span>
+    </div>
+    <div id="sidebar">
+      <div id="sidebar-toggle"><span class="codicon codicon-chevron-left"></span></div>
+      <div id="sidebar-header"></div>
+      <div id="sidebar-content">
+        <div id="explorer-view" class="sidebar-view active">
+          <div id="folder-tree"></div>
+        </div>
+        <div id="search-view" class="sidebar-view" style="display:none;">
+          <input id="search-input" placeholder="Search files..." style="width:90%;margin:8px 5%;padding:4px;" />
+          <div id="search-results"></div>
+        </div>
+        <div id="scm-view" class="sidebar-view" style="display:none;">Source Control coming soon...</div>
+        <div id="run-view" class="sidebar-view" style="display:none;">Run & Debug coming soon...</div>
+        <div id="extensions-view" class="sidebar-view" style="display:none;">Extensions coming soon...</div>
+      </div>
+    </div>
+    <div id="container"></div>
+    <div id="rightsidebar">
+      <div id="rightsidebar-toggle"><span class="codicon codicon-chevron-right"></span></div>
+      <div id="ai-agent-header">AI Agent</div>
+      <div id="ai-agent-content">
+        <div id="ai-agent-view">AI agent panel coming soon...</div>
+        <div id="ai-agent-panel" style="overflow:auto;max-height:calc(100vh - 40px);"></div>
+      </div>
+    </div>
+    <div id="rightbar">
+      <span class="codicon codicon-symbol-keyword" id="open-ai-agent" title="Open AI Agent Sidebar"></span>
+      <span class="codicon codicon-chevron-right" id="collapse-rightbar-btn" title="Collapse AI Sidebar"></span>
+    </div>
+  </div>
+  <div id="terminal-panel">
+    <div id="terminal-tabs">
+      <span class="term-tab active" data-index="0">Terminal 1 <span class="codicon codicon-close"></span></span>
+      <span class="codicon codicon-add" id="add-terminal-btn"></span>
+      <span style="margin-left:auto;cursor:pointer;" id="collapse-terminal-btn"><span class="codicon codicon-chevron-down"></span></span>
+      <span class="codicon codicon-chevron-up" id="bottom-panel-toggle" title="Collapse Terminal"></span>
+    </div>
+    <div id="terminal-container"></div>
+  </div>
+  <div id="statusbar">
+    <span>VSCode Lite</span>
+    <span id="status-language">JavaScript</span>
+    <span id="status-encoding">UTF-8</span>
+    <span id="status-eol">LF</span>
+  </div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

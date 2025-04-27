@@ -1,4 +1,4 @@
-(globalThis.TURBOPACK = globalThis.TURBOPACK || []).push(["static/chunks/src_d128685b._.js", {
+(globalThis.TURBOPACK = globalThis.TURBOPACK || []).push([typeof document === "object" ? document.currentScript : undefined, {
 
 "[project]/src/components/ui/badge.tsx [app-client] (ecmascript)": ((__turbopack_context__) => {
 "use strict";

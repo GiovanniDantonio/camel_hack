@@ -1,11 +1,11 @@
 const CHUNK_PUBLIC_PATH = "server/app/api/profile/github/route.js";
 const runtime = require("../../../../chunks/[turbopack]_runtime.js");
-runtime.loadChunk("server/chunks/node_modules_7833e84f._.js");
-runtime.loadChunk("server/chunks/node_modules_next_d43e26f5._.js");
+runtime.loadChunk("server/chunks/node_modules_1145293c._.js");
+runtime.loadChunk("server/chunks/node_modules_next_a4ba1cdc._.js");
 runtime.loadChunk("server/chunks/node_modules_tr46_816df9d9._.js");
-runtime.loadChunk("server/chunks/node_modules_@supabase_auth-js_dist_module_6b08851c._.js");
-runtime.loadChunk("server/chunks/node_modules_2ba84061._.js");
-runtime.loadChunk("server/chunks/[root of the server]__4a5e0dc1._.js");
+runtime.loadChunk("server/chunks/node_modules_@supabase_auth-js_dist_module_fbd19a5c._.js");
+runtime.loadChunk("server/chunks/node_modules_30e93ef9._.js");
+runtime.loadChunk("server/chunks/[root-of-the-server]__2e320678._.js");
 runtime.getOrInstantiateRuntimeModule("[project]/.next-internal/server/app/api/profile/github/route/actions.js [app-rsc] (server actions loader, ecmascript)", CHUNK_PUBLIC_PATH);
 runtime.getOrInstantiateRuntimeModule("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/src/app/api/profile/github/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)", CHUNK_PUBLIC_PATH);
 module.exports = runtime.getOrInstantiateRuntimeModule("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/src/app/api/profile/github/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)", CHUNK_PUBLIC_PATH).exports;

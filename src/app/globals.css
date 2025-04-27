@@ -156,3 +156,13 @@
 .dark .markdown-content code {
   background-color: #2e3440;
 }
+
+/* FIX: Remove invalid template CSS that breaks parsing */
+/*
+.[group:${this.groupId}] {
+    group: ${this.groupId};
+}
+.[https://en.wikipedia.org/wiki/Halfwidth_and_fullwidth_forms] {
+    https: //en.wikipedia.org/wiki/Halfwidth and fullwidth forms;
+}
+*/

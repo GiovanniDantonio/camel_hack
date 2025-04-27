@@ -1,4 +1,4 @@
-(globalThis.TURBOPACK = globalThis.TURBOPACK || []).push(["static/chunks/_1e019c3d._.js", {
+(globalThis.TURBOPACK = globalThis.TURBOPACK || []).push([typeof document === "object" ? document.currentScript : undefined, {
 
 "[project]/src/hooks/auth/useAuth.tsx [app-client] (ecmascript)": ((__turbopack_context__) => {
 "use strict";
