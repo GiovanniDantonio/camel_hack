@@ -156,3 +156,23 @@
 .dark .markdown-content code {
   background-color: #2e3440;
 }
+
+/* Special styling for code blocks in recommended fixes */
+.recommended-code pre {
+  background-color: #000; /* black background */
+  border: 2px solid #064e3b; /* dark green border */
+}
+
+.recommended-code code {
+  background-color: transparent;
+  color: inherit;
+}
+
+.dark .recommended-code pre {
+  background-color: #000;
+  border-color: #047857;
+}
+
+.dark .recommended-code code {
+  color: inherit;
+}
