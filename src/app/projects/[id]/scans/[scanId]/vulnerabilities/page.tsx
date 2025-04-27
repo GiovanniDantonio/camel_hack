@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Menu } from 'lucide-react';
 
-import { AttackComponent } from '@/components/AttackComponent';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,6 +39,7 @@ import {
   prism,
 } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
+import { SimpleAttackComponent } from '@/components/SimpleAttackComponent';
 
 // Use the Database type definition
 type VulnerabilityRow = Database['public']['Tables']['vulnerabilities']['Row'];
@@ -848,8 +848,9 @@ export default function VulnerabilitiesPage() {
       <div className="container mx-auto py-4">
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+            {/* Use a different icon? Maybe FileCode */}
             <CheckCircle className="h-10 w-10 text-green-500 mb-3" />
-            <h2 className="text-lg font-semibold text-green-700">
+            <h2 className="text-lg font-semibold">
               No Vulnerabilities Found
             </h2>
             <p className="text-muted-foreground text-sm mt-1">
@@ -1081,16 +1082,14 @@ export default function VulnerabilitiesPage() {
                   />
 
                   {/* Conditionally render Attack Button only when file is loaded */}
-                  {!isLoadingFile && fileContent && (
+                  {!isLoadingFile && fileContent && selectedVulnerability && (
                     <div className="py-4">
-                      <AttackComponent
-                        key={selectedVulnerability.id} // Key forces remount on vuln change
-                        projectId={projectId}
-                        vulnerabilityId={selectedVulnerability.id}
+                      <SimpleAttackComponent
+                        key={selectedVulnerability.id} // Remount on vulnerability change
+                        vulnerability={selectedVulnerability}
                         variant="outline"
                         size="sm"
                         className="w-full"
-                        redirectPath={`/projects/${projectId}/scans/${scanId}/vulnerabilities?vulnerabilityId=${selectedVulnerability.id}`}
                       />
                     </div>
                   )}

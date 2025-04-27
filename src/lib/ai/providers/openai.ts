@@ -3,7 +3,7 @@ import { ProviderRegistry } from "./registry";
 
 export enum OpenAIModel {
   GEMINI_2_5 = "google/gemini-2.5-pro-exp-03-25",
-  O4_MINI = "openai/o4-mini-high",
+  O4_MINI = "openai/o4-mini",
 }
 
 export class OpenAIService extends BaseAIService<OpenAIModel> {
