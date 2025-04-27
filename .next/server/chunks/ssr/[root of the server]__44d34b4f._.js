@@ -1522,6 +1522,7 @@ function VulnerabilitiesPage() {
     const [fileError, setFileError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [scanCommitHash, setScanCommitHash] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [scanBranch, setScanBranch] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('main');
+    const [repoUrl, setRepoUrl] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const codeContainerRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(null);
     // --- Data Fetching and Processing ---
     // Group vulnerabilities by file path
@@ -1574,6 +1575,26 @@ function VulnerabilitiesPage() {
                 const scanData = await scanResponse.json();
                 setScanCommitHash(scanData.commit_hash || null);
                 setScanBranch(scanData.branch || 'main');
+                // Fetch project details to get repository URL (only once)
+                if (!repoUrl) {
+                    try {
+                        // Try local API first
+                        const projRes = await fetch(`/api/projects/${projectId}`);
+                        if (projRes.ok) {
+                            const proj = await projRes.json();
+                            setRepoUrl(proj.repository_url || null);
+                        } else {
+                            // Fallback: query Supabase directly on client side
+                            const supabase = createClient();
+                            const { data: proj, error } = await supabase.from('projects').select('repository_url').eq('id', projectId).single();
+                            if (!error) {
+                                setRepoUrl(proj?.repository_url || null);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Could not fetch project details', e);
+                    }
+                }
                 // Fetch vulnerabilities using stable projectId/scanId
                 const vulnResponse = await fetch(`/api/projects/${projectId}/scans/${scanId}/vulnerabilities`);
                 if (!vulnResponse.ok) {
@@ -1716,8 +1737,12 @@ function VulnerabilitiesPage() {
     };
     const handleViewOnGithub = ()=>{
         if (!selectedVulnerability || !selectedVulnerability.file_path) return;
-        // Placeholder: Fetch or configure actual repo URL
-        const repoBaseUrl = 'https://github.com/your-org/your-repo'; // Replace with dynamic value if possible
+        if (!repoUrl) {
+            console.warn('Repository URL not available');
+            return;
+        }
+        // Clean repository URL (remove trailing .git if present)
+        const repoBaseUrl = repoUrl.replace(/\.git$/, '');
         const filePath = selectedVulnerability.file_path;
         const commitRef = scanCommitHash || scanBranch || 'main'; // Use commit, fallback to branch, then main
         const lineRef = selectedVulnerability.line_start ? `#L${selectedVulnerability.line_start}${selectedVulnerability.line_end && selectedVulnerability.line_end !== selectedVulnerability.line_start ? `-L${selectedVulnerability.line_end}` : ''}` : '';
@@ -1768,12 +1793,12 @@ function VulnerabilitiesPage() {
                 className: "h-8 w-8 animate-spin text-primary"
             }, void 0, false, {
                 fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                lineNumber: 743,
+                lineNumber: 774,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-            lineNumber: 742,
+            lineNumber: 773,
             columnNumber: 7
         }, this);
     }
@@ -1788,7 +1813,7 @@ function VulnerabilitiesPage() {
                             className: "h-10 w-10 text-destructive mx-auto mb-3"
                         }, void 0, false, {
                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                            lineNumber: 753,
+                            lineNumber: 784,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -1796,7 +1821,7 @@ function VulnerabilitiesPage() {
                             children: "Error Loading Vulnerabilities"
                         }, void 0, false, {
                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                            lineNumber: 754,
+                            lineNumber: 785,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1804,7 +1829,7 @@ function VulnerabilitiesPage() {
                             children: error
                         }, void 0, false, {
                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                            lineNumber: 757,
+                            lineNumber: 788,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1815,7 +1840,7 @@ function VulnerabilitiesPage() {
                                     children: "Back to Scan Details"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                    lineNumber: 759,
+                                    lineNumber: 790,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1824,29 +1849,29 @@ function VulnerabilitiesPage() {
                                     children: "Go to Projects"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                    lineNumber: 760,
+                                    lineNumber: 791,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                            lineNumber: 758,
+                            lineNumber: 789,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                    lineNumber: 752,
+                    lineNumber: 783,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                lineNumber: 751,
+                lineNumber: 782,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-            lineNumber: 750,
+            lineNumber: 781,
             columnNumber: 7
         }, this);
     }
@@ -1861,7 +1886,7 @@ function VulnerabilitiesPage() {
                             className: "h-10 w-10 text-green-500 mb-3"
                         }, void 0, false, {
                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                            lineNumber: 778,
+                            lineNumber: 809,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -1869,7 +1894,7 @@ function VulnerabilitiesPage() {
                             children: "No Vulnerabilities Found"
                         }, void 0, false, {
                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                            lineNumber: 779,
+                            lineNumber: 810,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1877,7 +1902,7 @@ function VulnerabilitiesPage() {
                             children: "Great job! No security vulnerabilities were detected in this scan."
                         }, void 0, false, {
                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                            lineNumber: 782,
+                            lineNumber: 813,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -1886,23 +1911,23 @@ function VulnerabilitiesPage() {
                             children: "Back to Scan Details"
                         }, void 0, false, {
                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                            lineNumber: 785,
+                            lineNumber: 816,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                    lineNumber: 777,
+                    lineNumber: 808,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                lineNumber: 776,
+                lineNumber: 807,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-            lineNumber: 775,
+            lineNumber: 806,
             columnNumber: 7
         }, this);
     }
@@ -1930,12 +1955,12 @@ function VulnerabilitiesPage() {
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                            lineNumber: 810,
+                                            lineNumber: 841,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                        lineNumber: 803,
+                                        lineNumber: 834,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1945,7 +1970,7 @@ function VulnerabilitiesPage() {
                                                 children: "Vulnerability Report"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                lineNumber: 813,
+                                                lineNumber: 844,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1953,24 +1978,24 @@ function VulnerabilitiesPage() {
                                                 children: `${vulnerabilities.length} ${vulnerabilities.length === 1 ? 'vulnerability' : 'vulnerabilities'} found`
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                lineNumber: 814,
+                                                lineNumber: 845,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                        lineNumber: 812,
+                                        lineNumber: 843,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                lineNumber: 802,
+                                lineNumber: 833,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                            lineNumber: 801,
+                            lineNumber: 832,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2005,7 +2030,7 @@ function VulnerabilitiesPage() {
                                                                                     className: "h-3.5 w-3.5 mr-1.5 text-muted-foreground flex-shrink-0"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                                    lineNumber: 852,
+                                                                                    lineNumber: 883,
                                                                                     columnNumber: 31
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
@@ -2013,13 +2038,13 @@ function VulnerabilitiesPage() {
                                                                                     children: filePath.split('/').pop()
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                                    lineNumber: 853,
+                                                                                    lineNumber: 884,
                                                                                     columnNumber: 31
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                            lineNumber: 851,
+                                                                            lineNumber: 882,
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2027,13 +2052,13 @@ function VulnerabilitiesPage() {
                                                                             children: filePath
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                            lineNumber: 857,
+                                                                            lineNumber: 888,
                                                                             columnNumber: 29
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                    lineNumber: 850,
+                                                                    lineNumber: 881,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Badge"], {
@@ -2042,13 +2067,13 @@ function VulnerabilitiesPage() {
                                                                     children: vulnerabilitiesByFile[filePath].length
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                    lineNumber: 861,
+                                                                    lineNumber: 892,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                            lineNumber: 835,
+                                                            lineNumber: 866,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2079,28 +2104,28 @@ function VulnerabilitiesPage() {
                                                                                                         className: "h-2.5 w-2.5 mr-0.5"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                                                        lineNumber: 911,
+                                                                                                        lineNumber: 942,
                                                                                                         columnNumber: 43
                                                                                                     }, this),
                                                                                                     (vulnerability.severity === 'high' || vulnerability.severity === 'medium') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$triangle$2d$alert$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertTriangle$3e$__["AlertTriangle"], {
                                                                                                         className: "h-2.5 w-2.5 mr-0.5"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                                                        lineNumber: 916,
+                                                                                                        lineNumber: 947,
                                                                                                         columnNumber: 43
                                                                                                     }, this),
                                                                                                     vulnerability.severity === 'low' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Shield$3e$__["Shield"], {
                                                                                                         className: "h-2.5 w-2.5 mr-0.5"
                                                                                                     }, void 0, false, {
                                                                                                         fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                                                        lineNumber: 919,
+                                                                                                        lineNumber: 950,
                                                                                                         columnNumber: 43
                                                                                                     }, this),
                                                                                                     vulnerability.severity === 'critical' ? 'Crit' : vulnerability.severity === 'medium' ? 'Med' : vulnerability.severity
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                                                lineNumber: 895,
+                                                                                                lineNumber: 926,
                                                                                                 columnNumber: 39
                                                                                             }, this),
                                                                                             vulnerability.line_start && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2112,13 +2137,13 @@ function VulnerabilitiesPage() {
                                                                                                 ]
                                                                                             }, void 0, true, {
                                                                                                 fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                                                lineNumber: 928,
+                                                                                                lineNumber: 959,
                                                                                                 columnNumber: 41
                                                                                             }, this)
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                                        lineNumber: 894,
+                                                                                        lineNumber: 925,
                                                                                         columnNumber: 37
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
@@ -2126,13 +2151,13 @@ function VulnerabilitiesPage() {
                                                                                         children: vulnerability.title
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                                        lineNumber: 938,
+                                                                                        lineNumber: 969,
                                                                                         columnNumber: 37
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                                lineNumber: 892,
+                                                                                lineNumber: 923,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2143,65 +2168,65 @@ function VulnerabilitiesPage() {
                                                                                     children: vulnerability.status === 'in_progress' ? 'In Prog' : vulnerability.status === 'false_positive' ? 'False+' : vulnerability.status === 'resolved' ? 'Fixed' : vulnerability.status
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                                    lineNumber: 944,
+                                                                                    lineNumber: 975,
                                                                                     columnNumber: 37
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                                lineNumber: 943,
+                                                                                lineNumber: 974,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                        lineNumber: 891,
+                                                                        lineNumber: 922,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 }, vulnerability.id, false, {
                                                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                                    lineNumber: 873,
+                                                                    lineNumber: 904,
                                                                     columnNumber: 31
                                                                 }, this))
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                            lineNumber: 870,
+                                                            lineNumber: 901,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, filePath, true, {
                                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                    lineNumber: 833,
+                                                    lineNumber: 864,
                                                     columnNumber: 23
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                            lineNumber: 831,
+                                            lineNumber: 862,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                        lineNumber: 830,
+                                        lineNumber: 861,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                    lineNumber: 829,
+                                    lineNumber: 860,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                lineNumber: 827,
+                                lineNumber: 858,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                            lineNumber: 826,
+                            lineNumber: 857,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                    lineNumber: 799,
+                    lineNumber: 830,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2216,7 +2241,7 @@ function VulnerabilitiesPage() {
                                     onViewOnGithub: handleViewOnGithub
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                    lineNumber: 987,
+                                    lineNumber: 1018,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2238,7 +2263,7 @@ function VulnerabilitiesPage() {
                                             codeContainerRef: codeContainerRef
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                            lineNumber: 995,
+                                            lineNumber: 1026,
                                             columnNumber: 19
                                         }, this),
                                         !isLoadingFile && fileContent && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2252,38 +2277,38 @@ function VulnerabilitiesPage() {
                                                 redirectPath: `/projects/${projectId}/scans/${scanId}/vulnerabilities?vulnerabilityId=${selectedVulnerability.id}`
                                             }, selectedVulnerability.id, false, {
                                                 fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                                lineNumber: 1014,
+                                                lineNumber: 1045,
                                                 columnNumber: 23
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                            lineNumber: 1013,
+                                            lineNumber: 1044,
                                             columnNumber: 21
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(RecommendationCard, {
                                             vulnerability: selectedVulnerability
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                            lineNumber: 1027,
+                                            lineNumber: 1058,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "flex-grow"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                            lineNumber: 1030,
+                                            lineNumber: 1061,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                    lineNumber: 993,
+                                    lineNumber: 1024,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                            lineNumber: 985,
+                            lineNumber: 1016,
                             columnNumber: 15
                         }, this) : // Placeholder when no file or vulnerability is selected initially
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -2293,7 +2318,7 @@ function VulnerabilitiesPage() {
                                     className: "h-10 w-10 text-muted-foreground mb-3"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                    lineNumber: 1037,
+                                    lineNumber: 1068,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -2301,7 +2326,7 @@ function VulnerabilitiesPage() {
                                     children: "Select a File or Vulnerability"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                    lineNumber: 1038,
+                                    lineNumber: 1069,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2309,34 +2334,34 @@ function VulnerabilitiesPage() {
                                     children: "Choose an item from the list on the left to view details."
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                                    lineNumber: 1041,
+                                    lineNumber: 1072,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                            lineNumber: 1035,
+                            lineNumber: 1066,
                             columnNumber: 15
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                        lineNumber: 983,
+                        lineNumber: 1014,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-                    lineNumber: 982,
+                    lineNumber: 1013,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-            lineNumber: 797,
+            lineNumber: 828,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/projects/[id]/scans/[scanId]/vulnerabilities/page.tsx",
-        lineNumber: 796,
+        lineNumber: 827,
         columnNumber: 5
     }, this);
 }

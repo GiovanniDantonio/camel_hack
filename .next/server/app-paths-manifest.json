@@ -1,4 +1,5 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
   "/api/github/repositories/route": "app/api/github/repositories/route.js",
   "/api/profile/github/route": "app/api/profile/github/route.js",
   "/api/projects/[id]/repository/commit/route": "app/api/projects/[id]/repository/commit/route.js",

@@ -428,6 +428,7 @@ export default function VulnerabilitiesPage() {
   const [fileError, setFileError] = useState<string | null>(null);
   const [scanCommitHash, setScanCommitHash] = useState<string | null>(null);
   const [scanBranch, setScanBranch] = useState<string>('main');
+  const [repoUrl, setRepoUrl] = useState<string | null>(null);
 
   const codeContainerRef = useRef<HTMLDivElement>(null);
 
@@ -512,6 +513,31 @@ export default function VulnerabilitiesPage() {
         const scanData = await scanResponse.json();
         setScanCommitHash(scanData.commit_hash || null);
         setScanBranch(scanData.branch || 'main');
+
+        // Fetch project details to get repository URL (only once)
+        if (!repoUrl) {
+          try {
+            // Try local API first
+            const projRes = await fetch(`/api/projects/${projectId}`);
+            if (projRes.ok) {
+              const proj = await projRes.json();
+              setRepoUrl(proj.repository_url || null);
+            } else {
+              // Fallback: query Supabase directly on client side
+              const supabase = createClient();
+              const { data: proj, error } = await supabase
+                .from('projects')
+                .select('repository_url')
+                .eq('id', projectId)
+                .single();
+              if (!error) {
+                setRepoUrl(proj?.repository_url || null);
+              }
+            }
+          } catch (e) {
+            console.warn('Could not fetch project details', e);
+          }
+        }
 
         // Fetch vulnerabilities using stable projectId/scanId
         const vulnResponse = await fetch(
@@ -677,8 +703,13 @@ export default function VulnerabilitiesPage() {
   const handleViewOnGithub = () => {
     if (!selectedVulnerability || !selectedVulnerability.file_path) return;
 
-    // Placeholder: Fetch or configure actual repo URL
-    const repoBaseUrl = 'https://github.com/your-org/your-repo'; // Replace with dynamic value if possible
+    if (!repoUrl) {
+      console.warn('Repository URL not available');
+      return;
+    }
+
+    // Clean repository URL (remove trailing .git if present)
+    const repoBaseUrl = repoUrl.replace(/\.git$/, '');
 
     const filePath = selectedVulnerability.file_path;
     const commitRef = scanCommitHash || scanBranch || 'main'; // Use commit, fallback to branch, then main
