@@ -93,6 +93,8 @@ export function SimpleAttackComponent({
       },
     } as const;
 
+    console.log("Attack payload:", payload);
+
     setIsRunning(true);
     setCompleted(false);
     setLogs([]);
