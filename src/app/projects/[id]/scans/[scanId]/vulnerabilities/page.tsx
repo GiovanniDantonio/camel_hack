@@ -373,7 +373,9 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
             <h4 className="text-sm font-medium text-green-800 dark:text-green-300 mb-0.5">
               Recommended Fix
             </h4>
-            <div className="text-sm text-green-700 dark:text-green-300 prose prose-sm dark:prose-invert max-w-none markdown-content">
+            <div className="text-sm text-green-600 dark:text-green-400 prose prose-sm dark:prose-invert max-w-none markdown-content 
+              prose-pre:bg-black prose-pre:text-green-400 prose-pre:border prose-pre:border-green-700 prose-pre:rounded-md prose-pre:p-4 prose-pre:font-mono 
+              prose-code:bg-black prose-code:text-green-400 prose-code:p-1 prose-code:rounded">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {vulnerability.remediation}
               </ReactMarkdown>
@@ -762,6 +764,7 @@ export default function VulnerabilitiesPage() {
       <div className="container mx-auto py-4">
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8 text-center">
+            {/* Use a different icon? Maybe FileCode */}
             <CheckCircle className="h-10 w-10 text-green-500 mb-3" />
             <h2 className="text-lg font-semibold text-green-700">
               No Vulnerabilities Found
