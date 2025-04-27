@@ -583,6 +583,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$provider
 var AnthropicModel = /*#__PURE__*/ function(AnthropicModel) {
     AnthropicModel["CLAUDE_3_5_SONNET"] = "claude-3-5-sonnet-latest";
     AnthropicModel["CLAUDE_3_7_SONNET"] = "claude-3-7-sonnet-latest";
+    AnthropicModel["CLAUDE_3_5_HAIKU"] = "claude-3-5-haiku-latest";
+    AnthropicModel["CLAUDE_3_5_OPUS"] = "claude-3-5-opus-latest";
     return AnthropicModel;
 }({});
 class AnthropicService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$base$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["BaseAIService"] {
@@ -625,6 +627,11 @@ var OpenAIModel = /*#__PURE__*/ function(OpenAIModel) {
     OpenAIModel["GPT_4o_MINI"] = "gpt-4o-mini";
     OpenAIModel["O1"] = "o1";
     OpenAIModel["O3_MINI"] = "o3-mini";
+    OpenAIModel["O4_MINI"] = "o4-mini";
+    OpenAIModel["GPT_4_TURBO"] = "gpt-4-turbo";
+    OpenAIModel["GPT_4_TURBO_128K"] = "gpt-4-turbo-128k";
+    OpenAIModel["GPT_4_VISION"] = "gpt-4-vision-preview";
+    OpenAIModel["GPT_3_5_TURBO"] = "gpt-3.5-turbo";
     return OpenAIModel;
 }({});
 class OpenAIService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$base$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["BaseAIService"] {
@@ -711,11 +718,20 @@ const Models = {
     getProviderName: (model)=>{
         // Check which provider's enum contains this model
         for (const [providerName, enumObj] of Object.entries(Models)){
-            if (providerName !== 'getProviderName' && Object.values(enumObj).includes(model)) {
+            if (providerName !== 'getProviderName' && providerName !== 'getAllModels' && Object.values(enumObj).includes(model)) {
                 return providerName;
             }
         }
         return "Unknown";
+    },
+    // Return a flattened array of ALL model values across providers
+    getAllModels: ()=>{
+        return [
+            ...Object.values(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$providers$2f$openai$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["OpenAIModel"]),
+            ...Object.values(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$providers$2f$xai$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["XAIModel"]),
+            ...Object.values(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$providers$2f$groq$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["GroqModel"]),
+            ...Object.values(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$providers$2f$anthropic$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["AnthropicModel"])
+        ];
     }
 };
 }}),
@@ -946,19 +962,19 @@ ${vulnerabilityList.length > 0 ? vulnerabilityList.map((vuln, index)=>`${index +
     const vulnArray = Array.from(vulnerabilityVotes.values());
     // Sort by number of votes (highest first)
     vulnArray.sort((a, b)=>b.votes - a.votes);
-    // Filter to only include vulnerabilities with votes >= threshold (majority vote)
-    // For 5 models, require at least 3 models to agree (majority)
-    const consensusThreshold = Math.ceil(allResults.length / 2); // Majority threshold
-    const consensusVulnerabilities = vulnArray.filter((v)=>v.votes >= consensusThreshold);
+    const maxVotes = vulnArray.length ? vulnArray[0].votes : 0;
+    // Select vulnerabilities with the highest vote count (handle ties gracefully)
+    const topVoted = vulnArray.filter((v)=>v.votes === maxVotes);
     console.log(`[VulnerabilityAgent] Voting results for ${path}:`);
     console.log(`- Total unique vulnerabilities found: ${vulnArray.length}`);
-    console.log(`- Vulnerabilities with consensus (≥${consensusThreshold} votes): ${consensusVulnerabilities.length}`);
-    // Convert back to Vulnerability[] format for database
-    return consensusVulnerabilities.map((vote)=>{
+    console.log(`- Top-voted vulnerabilities (votes = ${maxVotes}/${allResults.length}): ${topVoted.length}`);
+    // Convert back to Vulnerability[] format for database (return only top votes)
+    return topVoted.map((vote)=>{
         const vuln = vote.vulnerability;
+        const confPct = Math.round(vote.votes / allResults.length * 100);
         return {
-            title: `${vuln.title} [${vote.votes}/${allResults.length} models]`,
-            description: `${vuln.description}\n\n**Model Consensus:** ${vote.votes}/${allResults.length} models agreed (${vote.sources.join(', ')})`,
+            title: vuln.title,
+            description: `${vuln.description}\n\n**Consensus:** ${vote.votes}/${allResults.length} agents (${confPct}%) agreed\nSources: ${vote.sources.join(', ')}`,
             severity: vuln.severity,
             status: "open",
             location: path,
@@ -1100,18 +1116,49 @@ async function runVulnerabilityAgent(projectId, branch, commit, path, vulnerabil
     }
     // Use voting with multiple models in parallel
     console.log(`[VulnerabilityAgent] Using multi-model voting for ${path}`);
-    // Define model configurations
-    const modelConfigs = [
-        {
-            model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.GPT_4o
-        },
-        // {model: Models.Anthropic.CLAUDE_3_5_SONNET},
-        {
-            model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].XAI.GROK_2_LATEST
+    // -------------------------------------------------------------
+    // Use 50 identical OpenAI o4-mini models for consensus voting
+    // -------------------------------------------------------------
+    const modelConfigs = Array.from({
+        length: 50
+    }, ()=>({
+            model: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].OpenAI.O4_MINI
+        }));
+    // Helper to invoke models (used for full prompt and each chunk)
+    async function invokeModels(p) {
+        return Promise.all(modelConfigs.map((cfg)=>callModelWithErrorHandling(cfg.model, p)));
+    }
+    let modelResults = await invokeModels(prompt);
+    // Detect context window errors (sentinel { __tooLarge: true })
+    const exceeded = modelResults.some((r)=>r?.__tooLarge);
+    if (exceeded) {
+        console.warn(`[VulnerabilityAgent] Context window exceeded for ${path}. Falling back to chunk & stitch strategy`);
+        // Split file into ~300-line chunks (roughly < 30k tokens for safety)
+        const lines = repoContent.content.split("\n");
+        const CHUNK_SIZE = 300;
+        const chunks = [];
+        for(let start = 0; start < lines.length; start += CHUNK_SIZE){
+            const chunkLines = lines.slice(start, start + CHUNK_SIZE);
+            chunks.push({
+                start: start + 1,
+                content: chunkLines.join("\n")
+            });
         }
-    ];
-    // Call all models in parallel
-    const modelResults = await Promise.all(modelConfigs.map((config)=>callModelWithErrorHandling(config.model, prompt)));
+        const allChunkResults = [];
+        for (const chunk of chunks){
+            const chunkPrompt = buildVulnerabilityPrompt(path, `// Chunk starts at line ${chunk.start}\n${chunk.content}`, vulnerabilityList, customVulnerabilities);
+            const chunkModelResults = await invokeModels(chunkPrompt);
+            // Merge
+            chunkModelResults.forEach((res, idx)=>{
+                allChunkResults.push({
+                    results: res ? parseVulnerabilityResponse(res, path, projectId, chunkPrompt) : [],
+                    source: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$models$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["Models"].getProviderName(modelConfigs[idx].model)
+                });
+            });
+        }
+        // Apply voting across combined chunk results
+        return applyVotingMechanism(allChunkResults, path, projectId, prompt);
+    }
     // Parse results from each model
     const vulnerabilityResults = modelResults.map((result, index)=>({
             results: result ? parseVulnerabilityResponse(result, path, projectId, prompt) : [],

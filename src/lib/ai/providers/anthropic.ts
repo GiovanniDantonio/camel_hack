@@ -3,7 +3,9 @@ import { ProviderRegistry } from "./registry";
 
 export enum AnthropicModel {
   CLAUDE_3_5_SONNET = "claude-3-5-sonnet-latest",
-  CLAUDE_3_7_SONNET = "claude-3-7-sonnet-latest"
+  CLAUDE_3_7_SONNET = "claude-3-7-sonnet-latest",
+  CLAUDE_3_5_HAIKU = "claude-3-5-haiku-latest",
+  CLAUDE_3_5_OPUS = "claude-3-5-opus-latest"
 }
 
 export class AnthropicService extends BaseAIService<AnthropicModel> {

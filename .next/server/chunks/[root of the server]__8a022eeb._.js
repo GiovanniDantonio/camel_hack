@@ -273,7 +273,17 @@ async function DELETE(request) {
                 status: 403
             });
         }
-        // Delete the project
+        // First, remove dependent rows to satisfy foreign key constraints
+        const { error: attacksDeleteError } = await supabase.from('attacks').delete().eq('project_id', projectId);
+        if (attacksDeleteError) {
+            console.error('Error deleting related attacks:', attacksDeleteError);
+            return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
+                error: 'Failed to delete project related data'
+            }, {
+                status: 500
+            });
+        }
+        // Now delete the project
         const { error: deleteError } = await supabase.from('projects').delete().eq('id', projectId);
         if (deleteError) {
             console.error('Error deleting project:', deleteError);
