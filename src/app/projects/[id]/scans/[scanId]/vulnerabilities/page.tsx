@@ -40,6 +40,7 @@ import {
   prism,
 } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
+import { createClient } from '@supabase/supabase-js';
 
 // Use the Database type definition
 type VulnerabilityRow = Database['public']['Tables']['vulnerabilities']['Row'];

@@ -623,7 +623,6 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$ai$2f$provider
 ;
 ;
 var OpenAIModel = /*#__PURE__*/ function(OpenAIModel) {
-    OpenAIModel["GEMINI_2_5"] = "google/gemini-2.5-pro-exp-03-25";
     OpenAIModel["O4_MINI"] = "openai/o4-mini-high";
     return OpenAIModel;
 }({});
@@ -638,7 +637,7 @@ class OpenAIService extends __TURBOPACK__imported__module__$5b$project$5d2f$src$
         return model;
     }
     getDefaultModel() {
-        return "google/gemini-2.5-pro-exp-03-25";
+        return "openai/o4-mini-high";
     }
 }
 // Register the provider
@@ -966,10 +965,10 @@ ${vulnerabilityList.length > 0 ? vulnerabilityList.map((vuln, index)=>`${index +
     const vulnArray = Array.from(vulnerabilityVotes.values());
     const totalModels = allResults.length;
     // Keep vulnerabilities with ≥50% consensus
-    const consensusVulns = vulnArray.filter((v)=>v.votes / totalModels >= 0.3).sort((a, b)=>b.votes - a.votes);
+    const consensusVulns = vulnArray.filter((v)=>v.votes / totalModels >= 0.2).sort((a, b)=>b.votes - a.votes);
     console.log(`[VulnerabilityAgent] Voting results for ${path}:`);
     console.log(`- Total unique vulnerabilities found: ${vulnArray.length}`);
-    console.log(`- Vulnerabilities with ≥50% consensus: ${consensusVulns.length}/${totalModels}`);
+    console.log(`- Vulnerabilities with ≥20% consensus: ${consensusVulns.length}/${totalModels}`);
     // Convert back to Vulnerability[] format
     return consensusVulns.map((vote)=>{
         const vuln = vote.vulnerability;

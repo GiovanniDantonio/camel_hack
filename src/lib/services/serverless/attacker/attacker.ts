@@ -216,7 +216,7 @@ export async function analyzeVulnerabilityForAttack(
   console.log("Sending analysis prompt to LLM:", analysisPrompt);
 
   const analysisCompletion = await service.createCompletion(
-    Models.OpenAI.GPT_4o,
+    Models.OpenAI.O4_MINI,
     {
       messages: [
         {
@@ -304,7 +304,7 @@ export async function analyzeAttackResult(
 ): Promise<AttackResult> {
   // Use the LLM to analyze the attack result
   const aiService = AIService.getInstance();
-  const service = aiService.getService(Models.OpenAI.GPT_4o);
+  const service = aiService.getService(Models.OpenAI.O4_MINI);
   
   const analysisPrompt = `
     You are an expert security researcher tasked with analyzing the results of a SQL injection attack.
@@ -334,7 +334,7 @@ export async function analyzeAttackResult(
   await updateAttackLogs(supabase, attackId, `Attack result analysis prompt: ${analysisPrompt}`, "generating_report");
   
   const analysisCompletion = await service.createCompletion(
-    Models.OpenAI.GPT_4o,
+    Models.OpenAI.O4_MINI,
     {
       messages: [
         {
