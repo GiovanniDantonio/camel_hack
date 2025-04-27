@@ -174,3 +174,8 @@ cython_debug/
 # Ignore dependencies
 node_modules/
 node_modules
+
+# Next.js
+.next/
+.next
+s
