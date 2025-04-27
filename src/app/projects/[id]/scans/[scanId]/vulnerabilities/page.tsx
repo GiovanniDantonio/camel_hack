@@ -1168,7 +1168,7 @@ export default function VulnerabilitiesPage() {
                         const file = selectedVulnerability.file_path || '';
                         const line = selectedVulnerability.line_start || 1;
                         // Pass the issue context as a JSON string (encodeURIComponent)
-                        const issue = encodeURIComponent(JSON.stringify({
+                        const issueObj = {
                           title: selectedVulnerability.title,
                           description: selectedVulnerability.description,
                           remediation: selectedVulnerability.remediation,
@@ -1177,7 +1177,8 @@ export default function VulnerabilitiesPage() {
                           line_start: selectedVulnerability.line_start,
                           line_end: selectedVulnerability.line_end,
                           id: selectedVulnerability.id,
-                        }));
+                        };
+                        const issue = encodeURIComponent(JSON.stringify(issueObj));
                         // Open VSCode Lite with all context
                         window.open(`/vscode-lite?repo=${encodeURIComponent(repo)}&file=${encodeURIComponent(file)}&line=${line}&issue=${issue}`, '_blank');
                       }}

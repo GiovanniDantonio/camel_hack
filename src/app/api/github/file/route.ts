@@ -1,9 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from "@/lib/supabase/server";
 
 // GET /api/github/file?repo=owner/repo&path=path/to/file
 export async function GET(req: NextRequest) {
-  // Use static GitHub token from .env for now
-  const githubToken = process.env.GITHUB_ACCESS_TOKEN;
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const { data: githubProfile, error: profileError } = await supabase
+    .from('github_profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+  if (profileError || !githubProfile || !githubProfile.github_access_token) {
+    return NextResponse.json({ error: 'No GitHub OAuth token on file for user' }, { status: 401 });
+  }
+  const githubToken = githubProfile.github_access_token;
   if (!githubToken) {
     return NextResponse.json({ error: 'GitHub token not configured' }, { status: 500 });
   }
@@ -20,7 +33,15 @@ export async function GET(req: NextRequest) {
     },
   });
   if (!res.ok) {
-    return NextResponse.json({ error: 'GitHub API error', details: await res.json() }, { status: res.status });
+    // Log the full error response from GitHub for debugging
+    const errorDetails = await res.json();
+    console.error('[GitHub API ERROR - /api/github/file]', {
+      status: res.status,
+      statusText: res.statusText,
+      url: apiUrl,
+      githubError: errorDetails,
+    });
+    return NextResponse.json({ error: 'GitHub API error', details: errorDetails }, { status: res.status });
   }
   const data = await res.json();
   // File content is base64 encoded
@@ -29,8 +50,20 @@ export async function GET(req: NextRequest) {
 
 // POST /api/github/file
 export async function POST(req: NextRequest) {
-  // Use static GitHub token from .env for now
-  const githubToken = process.env.GITHUB_ACCESS_TOKEN;
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const { data: githubProfile, error: profileError } = await supabase
+    .from('github_profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+  if (profileError || !githubProfile || !githubProfile.github_access_token) {
+    return NextResponse.json({ error: 'No GitHub OAuth token on file for user' }, { status: 401 });
+  }
+  const githubToken = githubProfile.github_access_token;
   if (!githubToken) {
     return NextResponse.json({ error: 'GitHub token not configured' }, { status: 500 });
   }
@@ -68,7 +101,15 @@ export async function POST(req: NextRequest) {
     }),
   });
   if (!res2.ok) {
-    return NextResponse.json({ error: 'GitHub API error', details: await res2.json() }, { status: res2.status });
+    // Log the full error response from GitHub for debugging
+    const errorDetails = await res2.json();
+    console.error('[GitHub API ERROR - /api/github/file]', {
+      status: res2.status,
+      statusText: res2.statusText,
+      url: apiUrl,
+      githubError: errorDetails,
+    });
+    return NextResponse.json({ error: 'GitHub API error', details: errorDetails }, { status: res2.status });
   }
   const data2 = await res2.json();
   return NextResponse.json(data2);

@@ -1,18 +1,22 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/github/file/route": "app/api/github/file/route.js",
+  "/api/github/files/route": "app/api/github/files/route.js",
+  "/api/github/repositories/route": "app/api/github/repositories/route.js",
   "/api/profile/github/route": "app/api/profile/github/route.js",
   "/api/projects/[id]/repository/content/route": "app/api/projects/[id]/repository/content/route.js",
   "/api/projects/[id]/repository/files/route": "app/api/projects/[id]/repository/files/route.js",
   "/api/projects/[id]/repository/route": "app/api/projects/[id]/repository/route.js",
   "/api/projects/[id]/scans/[scanId]/route": "app/api/projects/[id]/scans/[scanId]/route.js",
   "/api/projects/[id]/scans/[scanId]/vulnerabilities/route": "app/api/projects/[id]/scans/[scanId]/vulnerabilities/route.js",
-  "/api/projects/[id]/scans/route": "app/api/projects/[id]/scans/route.js",
-  "/api/vulnerabilities/custom/route": "app/api/vulnerabilities/custom/route.js",
+  "/api/projects/new/route": "app/api/projects/new/route.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js",
   "/projects/[id]/page": "app/projects/[id]/page.js",
   "/projects/[id]/scans/[scanId]/page": "app/projects/[id]/scans/[scanId]/page.js",
   "/projects/[id]/scans/[scanId]/vulnerabilities/page": "app/projects/[id]/scans/[scanId]/vulnerabilities/page.js",
   "/projects/[id]/scans/new/page": "app/projects/[id]/scans/new/page.js",
-  "/projects/[id]/scans/page": "app/projects/[id]/scans/page.js",
-  "/projects/page": "app/projects/page.js"
+  "/projects/new-project/page": "app/projects/new-project/page.js",
+  "/projects/page": "app/projects/page.js",
+  "/vscode-lite/page": "app/vscode-lite/page.js"
 }

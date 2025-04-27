@@ -401,15 +401,21 @@ export default function VSCodeLitePage() {
     try {
       const raw = params.get('issue');
       issue = raw ? JSON.parse(decodeURIComponent(raw)) : undefined;
+      // DEBUG: log the parsed issue for troubleshooting
+      console.log('parseQuery: issue param (raw):', raw);
+      console.log('parseQuery: parsed issue:', issue);
     } catch (e) {
+      console.error('parseQuery: failed to parse issue param:', e);
       issue = undefined;
     }
-    return {
+    const state = {
       repo: params.get('repo') || '',
       file: params.get('file') || '',
       line: params.get('line') ? Number(params.get('line')) : undefined,
       issue,
     };
+    console.log('parseQuery: returning state', state);
+    return state;
   }
 
   // On mount, parse query params
@@ -417,82 +423,37 @@ export default function VSCodeLitePage() {
     setDeepLink(parseQuery());
   }, []);
 
-  // When repo, file, line, or issue changes, auto-select them
-  useEffect(() => {
-    if (!deepLink.repo) return;
-    if (!repo) setRepo(deepLink.repo);
-    // Wait for repo and githubFiles to be loaded
-    if (repo === deepLink.repo && githubFiles.length && !autoLoaded) {
-      if (deepLink.file) {
-        setCurrentFile(deepLink.file);
-        // Fetch file content if not already loaded
-        fetch(`/api/github/file?repo=${encodeURIComponent(repo)}&path=${encodeURIComponent(deepLink.file)}`)
-          .then(res => res.json())
-          .then(data => {
-            const content = data.content ? atob(data.content.replace(/\n/g, '')) : '';
-            setEditorValue(content);
-            // Optionally, scroll/highlight line in editor
-            setTimeout(() => {
-              if (deepLink.line && window.monaco) {
-                const editor = window.monaco && window.monaco.editor && window.monaco.editor.getEditors && window.monaco.editor.getEditors()[0];
-                if (editor) {
-                  editor.revealLineInCenter(deepLink.line);
-                  editor.setPosition({ lineNumber: deepLink.line, column: 1 });
-                  editor.focus();
-                }
-              }
-            }, 500);
-          });
-      }
-      setAutoLoaded(true);
-    }
-  }, [deepLink, repo, githubFiles, autoLoaded]);
+  // --- AI Agent Panel Content as React ---
+  function renderAIAgentPanel() {
+    if (!deepLink.issue) return null;
+    const issue = deepLink.issue;
+    return (
+      <div style={{ padding: '1em' }}>
+        <div style={{ fontWeight: 'bold', fontSize: '1.1em', marginBottom: '0.5em', color: '#c00' }}>{issue.title}</div>
+        <div style={{ marginBottom: '0.5em' }}><b>Severity:</b> {issue.severity || 'N/A'}</div>
+        <div style={{ marginBottom: '0.5em' }}><b>File:</b> <code>{issue.file_path || ''}</code> <b>Line:</b> {issue.line_start || ''}</div>
+        <div style={{ marginBottom: '0.5em' }}><b>Description:</b> <br />{issue.description || ''}</div>
+        {issue.remediation && (
+          <div style={{ marginBottom: '0.5em' }}>
+            <b>Recommended Fix:</b><br />
+            <pre style={{ background: '#222', color: '#fff', padding: '0.5em', borderRadius: 4 }}>{issue.remediation}</pre>
+          </div>
+        )}
+        <button
+          id="ai-fix-btn"
+          style={{ background: '#c00', color: '#fff', padding: '0.5em 1em', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 'bold' }}
+          onClick={() => alert('AI code fix coming soon!')}
+        >
+          Auto-Fix with AI
+        </button>
+      </div>
+    );
+  }
 
-  // --- Ensure repo is set from deep link on mount and when githubRepos change ---
-  useEffect(() => {
-    if (deepLink.repo && githubRepos.length) {
-      // Try to find a matching repo in the fetched list
-      const found = githubRepos.find(r => {
-        // Support both string and object repo formats
-        if (typeof r === 'string') return r === deepLink.repo;
-        if (r.full_name) return r.full_name === deepLink.repo;
-        if (r.name && r.owner) return `${r.owner.login}/${r.name}` === deepLink.repo;
-        return false;
-      });
-      if (found) setRepo(deepLink.repo);
-    }
-  }, [deepLink.repo, githubRepos]);
-
-  // Pass issue to AI Agent panel
+  // --- When deepLink.issue is present, always open the right sidebar and show the panel ---
   useEffect(() => {
     if (deepLink.issue) {
-      setRightSidebarCollapsed(false);
-      // Render issue in AI agent panel
-      const agentPanel = document.getElementById('ai-agent-panel');
-      if (agentPanel) {
-        agentPanel.innerHTML = '';
-        const div = document.createElement('div');
-        div.style.padding = '1em';
-        div.innerHTML = `
-          <div style='font-weight:bold;font-size:1.1em;margin-bottom:0.5em;color:#c00;'>${deepLink.issue.title}</div>
-          <div style='margin-bottom:0.5em;'><b>Severity:</b> ${deepLink.issue.severity || 'N/A'}</div>
-          <div style='margin-bottom:0.5em;'><b>File:</b> <code>${deepLink.issue.file_path || ''}</code> <b>Line:</b> ${deepLink.issue.line_start || ''}</div>
-          <div style='margin-bottom:0.5em;'><b>Description:</b> <br>${deepLink.issue.description || ''}</div>
-          ${deepLink.issue.remediation ? `<div style='margin-bottom:0.5em;'><b>Recommended Fix:</b><br><pre style='background:#222;color:#fff;padding:0.5em;border-radius:4px;'>${deepLink.issue.remediation}</pre></div>` : ''}
-          <button id='ai-fix-btn' style='background:#c00;color:#fff;padding:0.5em 1em;border:none;border-radius:4px;cursor:pointer;font-weight:bold;'>Auto-Fix with AI</button>
-        `;
-        agentPanel.appendChild(div);
-        // Add click handler for AI fix
-        setTimeout(() => {
-          const btn = document.getElementById('ai-fix-btn');
-          if (btn) {
-            btn.onclick = () => {
-              alert('AI code fix coming soon!');
-              // Here you would trigger the AI agent logic to propose and apply a fix
-            };
-          }
-        }, 100);
-      }
+      setRightSidebarCollapsed(false); // Open right sidebar
     }
   }, [deepLink.issue]);
 
@@ -582,32 +543,6 @@ export default function VSCodeLitePage() {
         <div className="tab active" style={{ background: 'none', color: '#fff', border: 'none', padding: '0 12px', height: 28, display: 'flex', alignItems: 'center', borderRadius: 4, fontWeight: 500 }}>
           {currentFile}{unsavedFiles.has(currentFile) && <span style={{ color: '#f55', marginLeft: 4 }}>*</span>} <span className="codicon codicon-close" style={{ marginLeft: 4 }}></span>
         </div>
-      </div>
-      <div style={{ position: 'absolute', top: 10, right: 24, zIndex: 20, display: 'flex', gap: 12 }}>
-        {/* Toggle Left Sidebar (Explorer etc) */}
-        <button
-          title="Toggle Left Sidebar"
-          style={{ width: 36, height: 36, background: '#23272e', border: 'none', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 6px #0002', cursor: 'pointer', outline: 'none', padding: 0 }}
-          onClick={() => setSidebarCollapsed(v => !v)}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18"><rect x="3" y="3" width="4" height="12" fill="#aaa"/><rect x="8" y="3" width="7" height="12" rx="2" fill="#ddd"/></svg>
-        </button>
-        {/* Toggle Bottom Panel (Terminal) */}
-        <button
-          title="Toggle Terminal"
-          style={{ width: 36, height: 36, background: '#23272e', border: 'none', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 6px #0002', cursor: 'pointer', outline: 'none', padding: 0 }}
-          onClick={() => setTerminalCollapsed(v => !v)}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18"><rect x="3" y="13" width="12" height="2" rx="1" fill="#aaa"/><rect x="3" y="3" width="12" height="8" rx="2" fill="#ddd"/></svg>
-        </button>
-        {/* Toggle Right Sidebar (AI Agent) */}
-        <button
-          title="Toggle Right Sidebar"
-          style={{ width: 36, height: 36, background: '#23272e', border: 'none', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 6px #0002', cursor: 'pointer', outline: 'none', padding: 0 }}
-          onClick={() => setRightSidebarCollapsed(v => !v)}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18"><rect x="11" y="3" width="4" height="12" fill="#aaa"/><rect x="3" y="3" width="7" height="12" rx="2" fill="#ddd"/></svg>
-        </button>
       </div>
       <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'row', width: '100%' }}>
         <div id="activitybar">
@@ -712,12 +647,15 @@ export default function VSCodeLitePage() {
             overflow: rightSidebarCollapsed ? 'hidden' : undefined,
             position: 'relative',
             userSelect: resizingRightSidebar.current ? 'none' : 'auto',
+            display: deepLink.issue ? 'block' : rightSidebarCollapsed ? 'none' : 'block',
           }}
         >
           <div id="rightsidebar-toggle" onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}><span className="codicon codicon-chevron-right"></span></div>
           <div id="ai-agent-header">AI Agent</div>
           <div id="ai-agent-content">
-            <div id="ai-agent-panel" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 40px)' }}></div>
+            <div id="ai-agent-panel" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 40px)' }}>
+              {renderAIAgentPanel()}
+            </div>
           </div>
           {/* Right sidebar resizer */}
           {!rightSidebarCollapsed && (

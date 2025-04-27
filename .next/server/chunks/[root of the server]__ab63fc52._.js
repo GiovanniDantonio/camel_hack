@@ -90,9 +90,17 @@ async function GET(req) {
         }
     });
     if (!res.ok) {
+        // Log the full error response from GitHub for debugging
+        const errorDetails = await res.json();
+        console.error('[GitHub API ERROR - /api/github/file]', {
+            status: res.status,
+            statusText: res.statusText,
+            url: apiUrl,
+            githubError: errorDetails
+        });
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             error: 'GitHub API error',
-            details: await res.json()
+            details: errorDetails
         }, {
             status: res.status
         });
@@ -149,9 +157,17 @@ async function POST(req) {
         })
     });
     if (!res2.ok) {
+        // Log the full error response from GitHub for debugging
+        const errorDetails = await res2.json();
+        console.error('[GitHub API ERROR - /api/github/file]', {
+            status: res2.status,
+            statusText: res2.statusText,
+            url: apiUrl,
+            githubError: errorDetails
+        });
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
             error: 'GitHub API error',
-            details: await res2.json()
+            details: errorDetails
         }, {
             status: res2.status
         });

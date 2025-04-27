@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from "@/lib/supabase/server";
 
 // GET /api/github/files?repo=owner/repo&path=path/to/dir
 export async function GET(req: NextRequest) {
-  // Use static GitHub token from .env for now
-  const githubToken = process.env.GITHUB_ACCESS_TOKEN;
-  if (!githubToken) {
-    return NextResponse.json({ error: 'GitHub token not configured' }, { status: 500 });
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  const { data: githubProfile, error: profileError } = await supabase
+    .from('github_profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+  if (profileError || !githubProfile || !githubProfile.github_access_token) {
+    return NextResponse.json({ error: 'No GitHub OAuth token on file for user' }, { status: 401 });
+  }
+  const githubToken = githubProfile.github_access_token;
+
   const { searchParams } = new URL(req.url);
   const repo = searchParams.get('repo');
   const path = searchParams.get('path') || '';
