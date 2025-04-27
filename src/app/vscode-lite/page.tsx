@@ -457,6 +457,59 @@ export default function VSCodeLitePage() {
     }
   }, [deepLink.issue]);
 
+  // --- Open AI Agent Panel by default ---
+  useEffect(() => {
+    setRightSidebarCollapsed(false);
+  }, []);
+
+  // --- Panel Toggle Buttons ---
+  useEffect(() => {
+    // Add floating set of panel toggle buttons for left, right, and bottom panels
+    const panelToggleButtons = document.getElementById('panel-toggle-buttons');
+    if (!panelToggleButtons) {
+      const container = document.getElementById('container');
+      if (container) {
+        const buttons = document.createElement('div');
+        buttons.id = 'panel-toggle-buttons';
+        buttons.style.position = 'absolute';
+        buttons.style.top = '12px';
+        buttons.style.right = '60px';
+        buttons.style.zIndex = '30';
+        buttons.style.display = 'flex';
+        buttons.style.gap = '8px';
+
+        const leftButton = document.createElement('button');
+        leftButton.className = 'vsc-btn';
+        leftButton.title = sidebarCollapsed ? 'Open Left Sidebar' : 'Close Left Sidebar';
+        leftButton.onclick = () => setSidebarCollapsed(!sidebarCollapsed);
+        const leftIcon = document.createElement('span');
+        leftIcon.className = `codicon ${sidebarCollapsed ? 'codicon-chevron-right' : 'codicon-chevron-left'}`;
+        leftButton.appendChild(leftIcon);
+        buttons.appendChild(leftButton);
+
+        const bottomButton = document.createElement('button');
+        bottomButton.className = 'vsc-btn';
+        bottomButton.title = terminalCollapsed ? 'Open Bottom Panel' : 'Close Bottom Panel';
+        bottomButton.onclick = () => setTerminalCollapsed(!terminalCollapsed);
+        const bottomIcon = document.createElement('span');
+        bottomIcon.className = `codicon ${terminalCollapsed ? 'codicon-chevron-up' : 'codicon-chevron-down'}`;
+        bottomButton.appendChild(bottomIcon);
+        buttons.appendChild(bottomButton);
+
+        const rightButton = document.createElement('button');
+        rightButton.className = 'vsc-btn';
+        rightButton.title = rightSidebarCollapsed ? 'Open AI Agent Panel' : 'Close AI Agent Panel';
+        rightButton.onclick = () => setRightSidebarCollapsed(!rightSidebarCollapsed);
+        const rightIcon = document.createElement('span');
+        rightIcon.className = `codicon ${rightSidebarCollapsed ? 'codicon-chevron-left' : 'codicon-chevron-right'}`;
+        rightButton.appendChild(rightIcon);
+        buttons.appendChild(rightButton);
+
+        container.appendChild(buttons);
+      }
+    }
+  }, [sidebarCollapsed, terminalCollapsed, rightSidebarCollapsed]);
+
   // Sidebar views logic
   function renderSidebarView() {
     switch (activeTab) {
@@ -652,8 +705,8 @@ export default function VSCodeLitePage() {
         >
           <div id="rightsidebar-toggle" onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}><span className="codicon codicon-chevron-right"></span></div>
           <div id="ai-agent-header">AI Agent</div>
-          <div id="ai-agent-content">
-            <div id="ai-agent-panel" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 40px)' }}>
+          <div id="ai-agent-content" style={{ padding: '0 8px 8px 8px', maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
+            <div id="ai-agent-panel">
               {renderAIAgentPanel()}
             </div>
           </div>
@@ -674,6 +727,88 @@ export default function VSCodeLitePage() {
         <span id="status-language">{currentFile.endsWith('.md') ? 'Markdown' : 'JavaScript'}</span>
         <span id="status-encoding">UTF-8</span>
         <span id="status-eol">LF</span>
+      </div>
+      {/* --- Panel Toggle Buttons: Top Right, VSCode Style --- */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 18,
+          right: 22,
+          zIndex: 40,
+          display: 'flex',
+          flexDirection: 'row',
+          gap: 10
+        }}
+      >
+        {/* Left Sidebar Toggle */}
+        <button
+          aria-label={sidebarCollapsed ? 'Open Left Sidebar' : 'Close Left Sidebar'}
+          title={sidebarCollapsed ? 'Open Left Sidebar' : 'Close Left Sidebar'}
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          style={{
+            background: sidebarCollapsed ? '#23272e' : '#23272e',
+            border: 'none',
+            borderRadius: 4,
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: sidebarCollapsed ? '0 0 0 2px #3794ff' : 'none',
+            cursor: 'pointer',
+            transition: 'background 0.15s, box-shadow 0.15s',
+            outline: sidebarCollapsed ? '2px solid #3794ff' : 'none',
+            color: sidebarCollapsed ? '#3794ff' : '#d4d4d4',
+          }}
+        >
+          <span className={`codicon ${sidebarCollapsed ? 'codicon-chevron-right' : 'codicon-chevron-left'}`}></span>
+        </button>
+        {/* Bottom Panel Toggle */}
+        <button
+          aria-label={terminalCollapsed ? 'Open Bottom Panel' : 'Close Bottom Panel'}
+          title={terminalCollapsed ? 'Open Bottom Panel' : 'Close Bottom Panel'}
+          onClick={() => setTerminalCollapsed(!terminalCollapsed)}
+          style={{
+            background: terminalCollapsed ? '#23272e' : '#23272e',
+            border: 'none',
+            borderRadius: 4,
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: terminalCollapsed ? '0 0 0 2px #3794ff' : 'none',
+            cursor: 'pointer',
+            transition: 'background 0.15s, box-shadow 0.15s',
+            outline: terminalCollapsed ? '2px solid #3794ff' : 'none',
+            color: terminalCollapsed ? '#3794ff' : '#d4d4d4',
+          }}
+        >
+          <span className={`codicon ${terminalCollapsed ? 'codicon-chevron-up' : 'codicon-chevron-down'}`}></span>
+        </button>
+        {/* Right Sidebar (AI Agent) Toggle */}
+        <button
+          aria-label={rightSidebarCollapsed ? 'Open AI Agent Panel' : 'Close AI Agent Panel'}
+          title={rightSidebarCollapsed ? 'Open AI Agent Panel' : 'Close AI Agent Panel'}
+          onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
+          style={{
+            background: rightSidebarCollapsed ? '#23272e' : '#23272e',
+            border: 'none',
+            borderRadius: 4,
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: rightSidebarCollapsed ? '0 0 0 2px #3794ff' : 'none',
+            cursor: 'pointer',
+            transition: 'background 0.15s, box-shadow 0.15s',
+            outline: rightSidebarCollapsed ? '2px solid #3794ff' : 'none',
+            color: rightSidebarCollapsed ? '#3794ff' : '#d4d4d4',
+          }}
+        >
+          <span className={`codicon ${rightSidebarCollapsed ? 'codicon-chevron-left' : 'codicon-chevron-right'}`}></span>
+        </button>
       </div>
     </div>
   );
