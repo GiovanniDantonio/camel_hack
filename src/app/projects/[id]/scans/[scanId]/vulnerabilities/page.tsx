@@ -209,9 +209,6 @@ const CodeViewerCard: React.FC<CodeViewerCardProps> = ({
 }) => {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">Vulnerability Report</h2>
-      </div>
       <div className="flex gap-2">
         <Button
           variant="outline"
