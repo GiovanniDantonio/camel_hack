@@ -3,7 +3,7 @@ import { ProviderRegistry } from "./registry";
 
 export enum OpenAIModel {
   O4_MINI = "openai/o4-mini",
-}
+  GEMINI_2_5 = "openai/o4-mini",}
 
 export class OpenAIService extends BaseAIService<OpenAIModel> {
   constructor() {
@@ -19,7 +19,7 @@ export class OpenAIService extends BaseAIService<OpenAIModel> {
   }
   
   protected getDefaultModel(): string {
-    return OpenAIModel.O4_MINI;
+    return OpenAIModel.GEMINI_2_5;
   }
 }
 

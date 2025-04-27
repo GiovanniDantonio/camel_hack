@@ -217,9 +217,20 @@ export function SimpleAttackComponent({
           onClick={handleRunAttack}
           disabled={isRunning}
         >
-          {isRunning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Run
-          Attack
+          Run Attack
         </Button>
+      )}
+
+      {/* Cyber security themed loading bar and message */}
+      {isRunning && logs.length === 0 && (
+        <div className="w-full flex flex-col items-center py-6">
+          <div className="w-3/4 h-4 bg-gray-800 rounded-full overflow-hidden mb-2">
+            <div className="h-full bg-gradient-to-r from-cyan-400 via-blue-600 to-purple-700 animate-pulse" style={{ width: '100%' }} />
+          </div>
+          <div className="text-cyan-300 font-mono text-sm mt-2">
+            Launching Exploit: <span className="text-purple-300">Engaging Attack Vector…</span>
+          </div>
+        </div>
       )}
 
       {canCancel && (
@@ -234,7 +245,7 @@ export function SimpleAttackComponent({
       )}
 
       {/* --- Log viewer --- */}
-      {(isRunning || completed) && (
+      {(isRunning && logs.length > 0) || completed ? (
         <Card className="w-full">
           <CardHeader>
             <CardTitle>Attack Logs</CardTitle>
@@ -262,7 +273,7 @@ export function SimpleAttackComponent({
             </ScrollArea>
           </CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   );
 }
