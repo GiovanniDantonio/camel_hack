@@ -128,9 +128,17 @@ def test_vulnerability(vuln: VulnerabilityIndication, query_limit: int) -> Vulne
 
     while query_count < query_limit:
         # 1. Generate Test Command
+        # Prepare authentication instruction for the prompt
+        auth_prompt_instruction = ""
+        if vuln.authentication_required and vuln.authentication_details:
+            auth_prompt_instruction = f"IMPORTANT: This request requires authentication. Use the following details: {vuln.authentication_details}. For curl with HTTP Basic Auth, use the '-u username:password' flag."
+        elif vuln.authentication_required:
+            auth_prompt_instruction = "IMPORTANT: This request requires authentication, but specific details were not provided in the report. Assume standard methods if possible."
+
         prompt_cmd = f"""
         Based on the following vulnerability details, generate a *single*, specific command-line command (e.g., using curl, wget) to test or exploit it.
         Focus on common and easily testable techniques for the indicated type.
+        {auth_prompt_instruction}
         Provide *only* the command, prefixed with 'Command:'.
 
         Vulnerability Details:

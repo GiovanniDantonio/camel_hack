@@ -1,0 +1,23 @@
+{
+  "scan_metadata": {
+    "scan_id": "natas0-scan-001",
+    "timestamp": "2024-07-28T17:00:00Z",
+    "source_details": "Natas Level 0 (http://natas0.natas.labs.overthewire.org)"
+  },
+  "vulnerabilities": [
+    {
+      "id": "natas0-src-disclosure-001",
+      "cwe_id": "CWE-540",
+      "description": "The initial Natas level often contains the password directly in the HTML source code, possibly within comments. Check the page source.",
+      "file_path": null,
+      "line_number": null,
+      "endpoint": "/",
+      "method": "GET",
+      "parameters": [],
+      "potential_exploit_type": "Source Code Disclosure",
+      "target_url_base": "http://natas0.natas.labs.overthewire.org",
+      "authentication_required": true,
+      "authentication_details": "HTTP Basic: natas0:natas0"
+    }
+  ]
+} 
