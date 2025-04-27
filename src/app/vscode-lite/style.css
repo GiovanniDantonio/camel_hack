@@ -350,6 +350,15 @@ button:focus-visible {
   min-height: 0;
 }
 
+/* Highlight for AI vulnerability line in Monaco */
+.ai-vuln-highlight {
+  background: linear-gradient(90deg, #ffe6e6 60%, #fffbe6 100%) !important;
+  border-left: 4px solid #e53935 !important;
+}
+.ai-vuln-gutter {
+  background: #e53935 !important;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

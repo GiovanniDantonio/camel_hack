@@ -354,6 +354,7 @@ export default function ProjectPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 dark:text-blue-400 hover:underline font-medium flex items-center"
+                  data-project-repo-name
                 >
                   {projectData.project.repository_full_name}
                   <ArrowRight className="ml-1 h-3 w-3" />
