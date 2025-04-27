@@ -5878,24 +5878,8 @@
     padding: calc(var(--spacing) * 1);
   }
 
-  .prose-code\:px-1 :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    padding-inline: calc(var(--spacing) * 1);
-  }
-
-  .prose-code\:font-mono :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    font-family: var(--font-geist-mono);
-  }
-
-  .prose-code\:text-\[\#00ff00\] :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    color: #0f0;
-  }
-
   .prose-code\:text-green-400 :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
     color: var(--color-green-400);
-  }
-
-  .prose-code\:text-green-500 :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    color: var(--color-green-500);
   }
 
   .prose-pre\:rounded-md :where(pre):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
@@ -5923,16 +5907,8 @@
     font-family: var(--font-geist-mono);
   }
 
-  .prose-pre\:text-\[\#00ff00\] :where(pre):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    color: #0f0;
-  }
-
   .prose-pre\:text-green-400 :where(pre):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
     color: var(--color-green-400);
-  }
-
-  .prose-pre\:text-green-500 :where(pre):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-    color: var(--color-green-500);
   }
 
   .\[\&_p\]\:leading-relaxed p {
@@ -6213,6 +6189,25 @@
 
 .dark .markdown-content code {
   background-color: #2e3440;
+}
+
+.recommended-code pre {
+  background-color: #000;
+  border: 2px solid #064e3b;
+}
+
+.recommended-code code {
+  background-color: #0000;
+  color: inherit;
+}
+
+.dark .recommended-code pre {
+  background-color: #000;
+  border-color: #047857;
+}
+
+.dark .recommended-code code {
+  color: inherit;
 }
 
 @keyframes enter {

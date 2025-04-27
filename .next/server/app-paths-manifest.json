@@ -1,4 +1,5 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
   "/api/github/repositories/route": "app/api/github/repositories/route.js",
   "/api/profile/github/route": "app/api/profile/github/route.js",
   "/api/projects/[id]/repository/commit/route": "app/api/projects/[id]/repository/commit/route.js",
@@ -8,6 +9,8 @@
   "/api/projects/[id]/scans/[scanId]/route": "app/api/projects/[id]/scans/[scanId]/route.js",
   "/api/projects/[id]/scans/[scanId]/vulnerabilities/route": "app/api/projects/[id]/scans/[scanId]/vulnerabilities/route.js",
   "/api/projects/[id]/scans/route": "app/api/projects/[id]/scans/route.js",
+  "/api/projects/[id]/vulnerabilities/[vulnerabilityId]/attack/[attackId]/cancel/route": "app/api/projects/[id]/vulnerabilities/[vulnerabilityId]/attack/[attackId]/cancel/route.js",
+  "/api/projects/[id]/vulnerabilities/[vulnerabilityId]/attack/route": "app/api/projects/[id]/vulnerabilities/[vulnerabilityId]/attack/route.js",
   "/api/projects/new/route": "app/api/projects/new/route.js",
   "/api/projects/settings/route": "app/api/projects/settings/route.js",
   "/api/vulnerabilities/custom/route": "app/api/vulnerabilities/custom/route.js",
