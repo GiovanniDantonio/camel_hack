@@ -415,6 +415,47 @@ export default function VulnerabilitiesPage() {
     return parts.slice(-2).join('/');
   }
 
+  // --- Fetch project data for repo name fallback ---
+  const params = useParams();
+  const projectId = params.id as string;
+  const [projectRepoName, setProjectRepoName] = useState<string>('');
+
+  useEffect(() => {
+    async function fetchProjectRepoName() {
+      if (!projectId) return;
+      try {
+        const response = await fetch(`/api/projects/${projectId}/repository`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) throw new Error('Failed to fetch project data');
+        const data = await response.json();
+        if (data?.project?.repository_full_name) {
+          setProjectRepoName(data.project.repository_full_name);
+        }
+      } catch (err) {
+        console.warn('[Fix Issue] Could not fetch repo name from API', err);
+      }
+    }
+    fetchProjectRepoName();
+  }, [projectId]);
+
+  // --- Get project repo name from DOM (project header) if available ---
+  function getProjectRepoNameFromHeader() {
+    // Try to find the project header element (adjust selector as needed)
+    // The repo name is the text content of the <a data-project-repo-name>
+    const header = document.querySelector('a[data-project-repo-name]');
+    if (header && header.textContent) {
+      console.log('[Fix Issue] Found repo name in anchor:', header.textContent);
+      return header.textContent.trim();
+    }
+    console.warn('[Fix Issue] No anchor with data-project-repo-name found in DOM at click time');
+    // Debug: log all anchors
+    const allAnchors = Array.from(document.querySelectorAll('a'));
+    allAnchors.forEach(a => console.log('[Fix Issue] Anchor:', a.outerHTML));
+    return '';
+  }
+
   // --- Hamburger menu filter UI ---
   const filterMenu = (
     <div className="flex items-center justify-between mb-4">
@@ -447,12 +488,10 @@ export default function VulnerabilitiesPage() {
       </DropdownMenu>
     </div>
   );
-  const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   // Extract primitive dependencies OUTSIDE effects
-  const projectId = params.id as string;
   const scanId = params.scanId as string;
 
   // Read initial vulnerabilityId from URL once
@@ -1111,8 +1150,21 @@ export default function VulnerabilitiesPage() {
                       size="sm"
                       className="w-full"
                       onClick={() => {
-                        // Prepare query params for VSCode Lite
-                        const repo = repoUrl ? getRepoNameFromUrl(repoUrl) : '';
+                        // Defensive: ensure repoUrl is available before constructing repo param
+                        let repo = '';
+                        if (repoUrl) {
+                          repo = getRepoNameFromUrl(repoUrl);
+                        } else if (selectedVulnerability && (selectedVulnerability as any).repository_url) {
+                          repo = getRepoNameFromUrl((selectedVulnerability as any).repository_url);
+                        } else if (projectRepoName) {
+                          repo = projectRepoName;
+                        } else {
+                          // Last fallback, try DOM (shouldn't be needed now)
+                          repo = getProjectRepoNameFromHeader();
+                          if (!repo) {
+                            console.warn('No repoUrl found for Fix Issue deep link');
+                          }
+                        }
                         const file = selectedVulnerability.file_path || '';
                         const line = selectedVulnerability.line_start || 1;
                         // Pass the issue context as a JSON string (encodeURIComponent)

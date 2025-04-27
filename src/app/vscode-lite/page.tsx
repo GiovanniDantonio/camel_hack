@@ -717,7 +717,6 @@ export default function VSCodeLitePage() {
           <div id="rightsidebar-toggle" onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}><span className="codicon codicon-chevron-right"></span></div>
           <div id="ai-agent-header">AI Agent</div>
           <div id="ai-agent-content">
-            <div id="ai-agent-view">AI agent panel coming soon...</div>
             <div id="ai-agent-panel" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 40px)' }}></div>
           </div>
           {/* Right sidebar resizer */}
